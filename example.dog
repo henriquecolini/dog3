@@ -1,0 +1,7 @@
+fn say_hello(everyone) {
+	put for person in $everyone {
+		put "Hello $person\n"
+	}
+}
+
+say_hello "Foo Bar Dog Man"

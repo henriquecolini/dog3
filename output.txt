@@ -1,0 +1,308 @@
+Program {
+    functions: [
+        Function {
+            name: "mergesort",
+            args: [
+                FormalParameter {
+                    name: "arr",
+                    default: None,
+                    vector: false,
+                },
+            ],
+            block: Block {
+                executions: [
+                    OpenStatement(
+                        SetStmt(
+                            SetStatement {
+                                variable: "len",
+                                value: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                CommandStmt(
+                                                    CommandStatement {
+                                                        name: "arrlen",
+                                                        parameters: [
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "\"$arr\"",
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            },
+                        ),
+                    ),
+                    ControlStatement(
+                        IfStatement(
+                            IfStatement {
+                                condition: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                CommandStmt(
+                                                    CommandStatement {
+                                                        name: "leq",
+                                                        parameters: [
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "$len",
+                                                                ),
+                                                            },
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "1",
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                                output: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                ReturnStmt(
+                                                    ReturnStatement {
+                                                        value: Some(
+                                                            Name(
+                                                                "$arr",
+                                                            ),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            },
+                        ),
+                    ),
+                    OpenStatement(
+                        SetStmt(
+                            SetStatement {
+                                variable: "hlen",
+                                value: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                CommandStmt(
+                                                    CommandStatement {
+                                                        name: "div",
+                                                        parameters: [
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "$len",
+                                                                ),
+                                                            },
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "2",
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            },
+                        ),
+                    ),
+                    OpenStatement(
+                        SetStmt(
+                            SetStatement {
+                                variable: "left",
+                                value: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                CommandStmt(
+                                                    CommandStatement {
+                                                        name: "first",
+                                                        parameters: [
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "$arr",
+                                                                ),
+                                                            },
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Block(
+                                                                    Block {
+                                                                        executions: [
+                                                                            OpenStatement(
+                                                                                CommandStmt(
+                                                                                    CommandStatement {
+                                                                                        name: "floor",
+                                                                                        parameters: [
+                                                                                            ActualParameter {
+                                                                                                name: None,
+                                                                                                value: Name(
+                                                                                                    "$hlen",
+                                                                                                ),
+                                                                                            },
+                                                                                        ],
+                                                                                    },
+                                                                                ),
+                                                                            ),
+                                                                        ],
+                                                                    },
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            },
+                        ),
+                    ),
+                    OpenStatement(
+                        SetStmt(
+                            SetStatement {
+                                variable: "right",
+                                value: Block(
+                                    Block {
+                                        executions: [
+                                            OpenStatement(
+                                                CommandStmt(
+                                                    CommandStatement {
+                                                        name: "last",
+                                                        parameters: [
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Name(
+                                                                    "$arr",
+                                                                ),
+                                                            },
+                                                            ActualParameter {
+                                                                name: None,
+                                                                value: Block(
+                                                                    Block {
+                                                                        executions: [
+                                                                            OpenStatement(
+                                                                                CommandStmt(
+                                                                                    CommandStatement {
+                                                                                        name: "ceil",
+                                                                                        parameters: [
+                                                                                            ActualParameter {
+                                                                                                name: None,
+                                                                                                value: Name(
+                                                                                                    "$hlen",
+                                                                                                ),
+                                                                                            },
+                                                                                        ],
+                                                                                    },
+                                                                                ),
+                                                                            ),
+                                                                        ],
+                                                                    },
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            },
+                        ),
+                    ),
+                    OpenStatement(
+                        CommandStmt(
+                            CommandStatement {
+                                name: "merge",
+                                parameters: [
+                                    ActualParameter {
+                                        name: None,
+                                        value: Block(
+                                            Block {
+                                                executions: [
+                                                    OpenStatement(
+                                                        CommandStmt(
+                                                            CommandStatement {
+                                                                name: "mergesort",
+                                                                parameters: [
+                                                                    ActualParameter {
+                                                                        name: None,
+                                                                        value: Name(
+                                                                            "$left",
+                                                                        ),
+                                                                    },
+                                                                ],
+                                                            },
+                                                        ),
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                    },
+                                    ActualParameter {
+                                        name: None,
+                                        value: Block(
+                                            Block {
+                                                executions: [
+                                                    OpenStatement(
+                                                        CommandStmt(
+                                                            CommandStatement {
+                                                                name: "mergesort",
+                                                                parameters: [
+                                                                    ActualParameter {
+                                                                        name: None,
+                                                                        value: Name(
+                                                                            "$right",
+                                                                        ),
+                                                                    },
+                                                                ],
+                                                            },
+                                                        ),
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                    },
+                                ],
+                            },
+                        ),
+                    ),
+                ],
+            },
+        },
+    ],
+    executions: [
+        OpenStatement(
+            CommandStmt(
+                CommandStatement {
+                    name: "mergesort",
+                    parameters: [
+                        ActualParameter {
+                            name: None,
+                            value: Name(
+                                "\"66 9 12 3 45\"",
+                            ),
+                        },
+                    ],
+                },
+            ),
+        ),
+    ],
+}

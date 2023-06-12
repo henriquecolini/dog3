@@ -1,0 +1,75 @@
+// Special Characters
+Semi    = { ";" }
+Comma   = { "," }
+LCurly  = { "{" }
+RCurly  = { "}" }
+LPar    = { "(" }
+RPar    = { ")" }
+DQuote  = { "\"" }
+SQuote  = { "'" }
+Equals  = { "=" }
+Dollar  = { "$" }
+Destroy = { "%" }
+RESERVED = _{ "[" | "]" | "`" | "&" }
+SPECIAL = _{ ";" | "," | "{" | "}" | "(" | ")" | "\\" | "\"" | "'" | "=" | "$" | "%" | RESERVED }
+
+// Keywords
+If      =  { "if" }
+Else    =  { "else" }
+Fn      =  { "fn" }
+For     =  { "for" }
+In      =  { "in" }
+Split   =  { "split" }
+Clear   =  { "clear" }
+Return  =  { "return" }
+KEYWORD = _{ If | Else | Fn | For | In | Split | Clear | Return }
+
+// Strings
+IDENTIFIER = _{ !KEYWORD ~ (!SPECIAL ~ !WHITE_SPACE ~ ANY)+ }
+VARIABLE   = _{ Dollar ~ (Destroy?) ~ IDENTIFIER }
+ESC        = _{ "\\" ~ ("\\" | "n" | "r" | "t") }
+SQ_ESC     = _{ "\\'" }
+DQ_ESC     = _{ "\\\"" }
+OS_ESC     = _{ "\\" ~ WHITE_SPACE }
+VAR_ESC    = _{ "\\" ~ Dollar | "\\" ~ Destroy }
+
+Identifier   = @{ IDENTIFIER }
+SQuoteString = @{ !KEYWORD ~ SQuote ~ (ESC | SQ_ESC | !("\\" | "'") ~ ANY)* ~ SQuote }
+DQuoteString = @{ !KEYWORD ~ DQuote ~ (ESC | DQ_ESC | VARIABLE | VAR_ESC | (!("\\" | DQuote | "$" | "%") ~ ANY) )* ~ DQuote }
+OpenString   = @{ !KEYWORD ~          (ESC | OS_ESC | VARIABLE | VAR_ESC | (!("\\" | SPECIAL | WHITE_SPACE) ~ ANY))+ }
+
+WHITESPACE = _{ WHITE_SPACE }
+
+// Main Parser
+
+Program    = { (ControlStmt ~ Semi* | Function ~ Semi* | Block ~ Semi* | OpenStmt ~ Semi+)* ~ (OpenStmt ~ Semi?)? ~ EOI }
+Executions = { (ControlStmt ~ Semi* | Block ~ Semi* | OpenStmt ~ Semi+)* ~ (OpenStmt ~ Semi?)? }
+
+String = { OpenString | Identifier | SQuoteString | DQuoteString }
+
+// Blocks and Values
+
+Value = { String | Block | ControlStmt }
+Block = { LCurly ~ Executions ~ RCurly }
+
+// Control Statements
+
+ControlStmt  = { ForStmt | ForSplitStmt | IfStmt | IfElseStmt }
+ForStmt      = { For ~ Identifier ~ In ~ Value ~ Value }
+ForSplitStmt = { For ~ Identifier ~ In ~ Value ~ Split ~ Value ~ Value }
+IfStmt       = { If ~ Value ~ Value }
+IfElseStmt   = { If ~ Value ~ Value ~ Else ~ Value }
+
+// Open Statements
+
+OpenStmt      = { SetStmt | ReturnStmt | ClearStmt | CommandStmt }
+CommandStmt   = { Identifier ~ CommandArgs }
+CommandArgs   = { Value* }
+SetStmt       = { Identifier ~ Equals ~ Value }
+ClearStmt     = { Clear ~ Value? }
+ReturnStmt    = { Return ~ Value? }
+
+// Functions
+
+Function    = { Fn ~ Identifier ~ LPar ~ FormalArgs ~ RPar ~ Block }
+FormalArgs  = { (Identifier ~ Comma)* ~ (Destroy? ~ Identifier)? }
