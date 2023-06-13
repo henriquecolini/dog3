@@ -19,6 +19,7 @@ pub enum Next {
 	Proceed,
 	Append(Output),
 	Return(Output),
+	Clear(Output),
 	Abort(ExecutionError),
 }
 
@@ -171,7 +172,12 @@ fn execute_command_statement(
 					func_scope.set_var(&arg.name, &outputs.remove(0))
 				}
 			}
-			return execute_block(functions, &mut func_scope, block);
+			let res = execute_block(functions, &mut func_scope, block);
+			let res = match res {
+				Next::Return(out) => Next::Append(out),
+				other => other
+			};
+			return res;
 		}
 		Runnable::BuiltIn(builtin) => return builtin(outputs.as_slice()).into(),
 	}
@@ -182,7 +188,14 @@ fn execute_clear_statement(
 	scope: &mut Scope<'_>,
 	stmt: &ClearStatement,
 ) -> Next {
-	todo!()
+	Next::Clear(match &stmt.value {
+		Some(value) => match execute_value(functions, scope, &value) {
+			Next::Append(output) => output,
+			Next::Proceed => unreachable!(),
+			other => return other,
+		},
+		None => Output::new_truthy(),
+	})
 }
 
 fn execute_return_statement(
@@ -283,6 +296,7 @@ fn execute_statements<'a>(
 		match next {
 			Next::Proceed => continue,
 			Next::Append(out) => output.append(out),
+			Next::Clear(out) => output = out,
 			other => return other,
 		}
 	}

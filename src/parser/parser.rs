@@ -9,6 +9,7 @@ use super::format_string::FormatString;
 #[macro_export]
 macro_rules! params {
     ($($param:expr),*) => {{
+		#[allow(unused_mut)]
         let mut parameters = Vec::new();
         $(
             let vector = $param.starts_with('%');
@@ -156,10 +157,6 @@ fn build_string(entry: Pair<'_, Rule>) -> FormatString {
 	)
 }
 
-fn build_raw_string(entry: Pair<'_, Rule>) -> String {
-	FormatString::parse(entry.as_span().as_str(), false).into()
-}
-
 fn build_value(entry: Pair<'_, Rule>) -> Value {
 	for pair in entry.into_inner() {
 		match pair.as_rule() {
@@ -269,7 +266,7 @@ fn build_if_else_stmt(entry: Pair<'_, Rule>) -> IfElseStatement {
 				}
 				value_index += 1
 			}
-			Rule::If => continue,
+			Rule::If | Rule::Else => continue,
 			_ => unreachable!(),
 		}
 	}

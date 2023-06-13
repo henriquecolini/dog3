@@ -54,7 +54,7 @@ Block = { LCurly ~ Executions ~ RCurly }
 
 // Control Statements
 
-ControlStmt  = { ForStmt | ForSplitStmt | IfStmt | IfElseStmt }
+ControlStmt  = { ForStmt | ForSplitStmt | IfElseStmt | IfStmt }
 ForStmt      = { For ~ Identifier ~ In ~ Value ~ Value }
 ForSplitStmt = { For ~ Identifier ~ In ~ Value ~ Split ~ Value ~ Value }
 IfStmt       = { If ~ Value ~ Value }
