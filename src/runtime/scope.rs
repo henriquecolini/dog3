@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::output::Output;
+use super::output::Output;
 
 pub struct Scope<'a> {
 	root: Option<&'a Scope<'a>>,

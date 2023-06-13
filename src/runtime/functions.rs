@@ -1,10 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::{
-	output::Output,
-	parser::{Block, FormalParameter},
-	runtime::ExecutionError,
-};
+use crate::parser::parser::{Block, FormalParameter};
+
+use super::{output::Output, runtime::ExecutionError};
 
 type BuiltIn = fn(&[Output]) -> Result<Output, ExecutionError>;
 
@@ -95,6 +93,19 @@ impl FunctionLibrary {
 				))
 			}
 		}
+	}
+	pub fn register_library(
+		&mut self,
+		other: FunctionLibrary,
+	) -> Result<String, RegisterError> {
+		let mut count = 0;
+		for (name,anons) in other.functions.into_iter() {
+			for func in anons {
+				count += 1;
+				self.register_function(&name, func.args, func.runnable)?;
+			}
+		}
+		Ok(format!("Registered {} functions", count))
 	}
 
 	pub fn get_list(&self, name: &str) -> Option<&Vec<AnonymousFunction>> {

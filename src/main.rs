@@ -1,65 +1,47 @@
-use std::fs;
+use std::{fs, path::PathBuf};
 
-use functions::Runnable;
-use output::Output;
-use parser::{parse, FormalParameter};
-use runtime::{ExecutionError, Runtime};
+use clap::Parser;
+use dog3::{
+	dogs,
+	parser::parser::{parse, Rule},
+	runtime::{functions::RegisterError, runtime::Runtime},
+};
 
-mod format_string;
-mod functions;
-mod output;
-mod parser;
-mod runtime;
-mod scope;
-
-fn put(args: &[Output]) -> Result<Output, ExecutionError> {
-	let joined_values = args
-		.iter()
-		.map(|output| output.value.clone())
-		.collect::<Vec<String>>()
-		.join(" ");
-	Ok(Output::new(joined_values, 0))
+#[derive(Parser, Debug)]
+struct Args {
+	inputs: Vec<PathBuf>,
 }
 
-fn arrlen(args: &[Output]) -> Result<Output, ExecutionError> {
-	let first = args.first();
-	match first {
-		Some(first) => {
-			return Ok(Output::new_truthy_with(
-				first.value.split_whitespace().count().to_string(),
-			));
-		}
-		None => {
-			return Err(runtime::ExecutionError::InternalError);
+#[derive(Debug)]
+enum Error {
+	IO(std::io::Error),
+	Syntax(pest::error::Error<Rule>),
+	Library(RegisterError),
+}
+
+fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
+	runtime.functions.register_library(dogs::std::build())
+}
+
+fn main() -> Result<(), Error> {
+	let args = Args::parse();
+	let mut inputs = vec![];
+	for path in args.inputs {
+		match fs::read_to_string(path) {
+			Ok(content) => inputs.push(content),
+			Err(err) => {
+				return Err(Error::IO(err));
+			}
 		}
 	}
-}
-
-fn main() {
-	let input = fs::read_to_string("example.dog").expect("Failed to read file");
-	let program = parse(&input).expect("Failed to parse");
 	let mut runtime = Runtime::new();
-	runtime
-		.functions
-		.register_function(
-			"put",
-			vec![FormalParameter {
-				name: "put".to_owned(),
-				vector: true,
-			}],
-			Runnable::BuiltIn(put),
-		)
-		.expect("Failed to register put");
-	runtime
-		.functions
-		.register_function(
-			"arrlen",
-			vec![FormalParameter {
-				name: "arrlen".to_owned(),
-				vector: false,
-			}],
-			Runnable::BuiltIn(arrlen),
-		)
-		.expect("Failed to register put");
+	if let Err(err) = register_libraries(&mut runtime) {
+		return Err(Error::Library(err));
+	}
+	let program = match parse(&inputs.join("\n")) {
+		Ok(program) => program,
+		Err(err) => return Err(Error::Syntax(err)),
+	};
 	runtime.execute(program);
+	Ok(())
 }
