@@ -1,12 +1,12 @@
-use std::{fmt::Display, time::Instant};
+use std::{fmt::Display, time::Instant, collections::HashMap};
 
 use crate::parser::{format_string::*, parser::*};
 
-use super::{functions::*, scope::*, output::*};
+use super::{functions::*, scope::*, output::*, scope::ScopeStack};
 
-pub struct Runtime<'a> {
+pub struct Runtime {
 	pub functions: FunctionLibrary,
-	pub global_scope: Scope<'a>,
+	pub global_scope: Scope,
 }
 
 #[derive(Debug)]
@@ -29,6 +29,18 @@ pub enum ExecutionError {
 	UndefinedFunction(String),
 	InternalError,
 }
+
+macro_rules! scoped {
+    ($stack:expr, $block:block) => {
+        {
+            $stack.push();
+            let res = (|| $block)();
+            $stack.pop();
+            res
+        }
+    };
+}
+
 
 impl Next {
 	fn supress(self) -> Next {
@@ -73,12 +85,21 @@ macro_rules! evaluate {
 	};
 }
 
-fn execute_string(scope: &mut Scope<'_>, name: &FormatString) -> Next {
+macro_rules! proceed {
+	($x:expr) => {
+		match $x {
+			Next::Proceed => Next::Proceed,
+			other => return other,
+		}
+	};
+}
+
+fn execute_string(stack: &mut ScopeStack, name: &FormatString) -> Next {
 	let mut output = Output::new_truthy();
 	for piece in name.into_iter() {
 		match piece {
 			FormatStringPiece::Raw(value) => output.append(Output::new(value.to_owned(), 0)),
-			FormatStringPiece::Variable(var) => match scope.get_var(var) {
+			FormatStringPiece::Variable(var) => match stack.get_var(var) {
 				Some(value) => output.append(value.clone()),
 				None => return Next::Abort(ExecutionError::UndeclaredVariable(var.to_owned())),
 			},
@@ -87,40 +108,39 @@ fn execute_string(scope: &mut Scope<'_>, name: &FormatString) -> Next {
 	Next::Append(output)
 }
 
-fn execute_value(functions: &FunctionLibrary, scope: &mut Scope<'_>, value: &Value) -> Next {
+fn execute_value(functions: &FunctionLibrary, stack: &mut ScopeStack, value: &Value) -> Next {
 	match value {
-		Value::String(name) => execute_string(scope, name),
-		Value::Block(block) => execute_block(functions, scope, block),
-		Value::ControlStatement(control) => execute_control_statement(functions, scope, control),
+		Value::String(name) => execute_string(stack, name),
+		Value::Block(block) => execute_block(functions, stack, block),
+		Value::ControlStatement(control) => execute_control_statement(functions, stack, control),
 	}
 }
 
-fn execute_block(functions: &FunctionLibrary, scope: &mut Scope<'_>, block: &Block) -> Next {
-	let mut inner = Scope::new(Some(scope));
-	return execute_statements(functions, &mut inner, &block.executions);
+fn execute_block(functions: &FunctionLibrary, stack: &mut ScopeStack, block: &Block) -> Next {
+	scoped!(stack, {execute_statements(functions, stack, &block.executions)})
 }
 
 fn execute_open_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	open: &OpenStatement,
 ) -> Next {
 	match &open {
-		OpenStatement::SetStmt(stmt) => execute_set_statement(functions, scope, stmt),
-		OpenStatement::ReturnStmt(stmt) => execute_return_statement(functions, scope, stmt),
-		OpenStatement::ClearStmt(stmt) => execute_clear_statement(functions, scope, stmt),
-		OpenStatement::CommandStmt(stmt) => execute_command_statement(functions, scope, stmt),
+		OpenStatement::SetStmt(stmt) => execute_set_statement(functions, stack, stmt),
+		OpenStatement::ReturnStmt(stmt) => execute_return_statement(functions, stack, stmt),
+		OpenStatement::ClearStmt(stmt) => execute_clear_statement(functions, stack, stmt),
+		OpenStatement::CommandStmt(stmt) => execute_command_statement(functions, stack, stmt),
 	}
 }
 
 fn execute_set_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &SetStatement,
 ) -> Next {
-	match execute_value(functions, scope, &stmt.value) {
+	match execute_value(functions, stack, &stmt.value) {
 		Next::Append(output) => {
-			scope.set_var(stmt.variable.as_str(), &output);
+			stack.set_var(stmt.variable.as_str(), output);
 			Next::Proceed
 		}
 		other => other,
@@ -129,7 +149,7 @@ fn execute_set_statement(
 
 fn execute_command_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &CommandStatement,
 ) -> Next {
 	let func_list = functions.get_list(&stmt.name);
@@ -139,7 +159,7 @@ fn execute_command_statement(
 	};
 	let mut outputs = vec![];
 	for arg in &stmt.parameters {
-		let output = evaluate!(execute_value(functions, scope, &arg.value));
+		let output = evaluate!(execute_value(functions, stack, &arg.value));
 		outputs.push(output);
 	}
 	let count = outputs.len();
@@ -152,7 +172,7 @@ fn execute_command_statement(
 	};
 	match &func.runnable {
 		Runnable::Block(block) => {
-			let mut func_scope = Scope::new_cousin(&scope);
+			let mut func_stack = ScopeStack::new_sibling(stack);
 			for (i, arg) in func.args.iter().enumerate() {
 				if i == func.args.len() {
 					let joined_values = outputs
@@ -161,18 +181,18 @@ fn execute_command_statement(
 						.collect::<Vec<String>>()
 						.join(" ");
 					let last_code = outputs.last().unwrap().code;
-					func_scope.set_var(
+					func_stack.set_var(
 						&arg.name,
-						&Output {
+						Output {
 							value: joined_values,
 							code: last_code,
 						},
 					);
 				} else {
-					func_scope.set_var(&arg.name, &outputs.remove(0))
+					func_stack.set_var(&arg.name, outputs.remove(0))
 				}
 			}
-			let res = execute_block(functions, &mut func_scope, block);
+			let res = execute_block(functions, &mut func_stack, block);
 			let res = match res {
 				Next::Return(out) => Next::Append(out),
 				other => other
@@ -185,11 +205,11 @@ fn execute_command_statement(
 
 fn execute_clear_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &ClearStatement,
 ) -> Next {
 	Next::Clear(match &stmt.value {
-		Some(value) => match execute_value(functions, scope, &value) {
+		Some(value) => match execute_value(functions, stack, &value) {
 			Next::Append(output) => output,
 			Next::Proceed => unreachable!(),
 			other => return other,
@@ -200,11 +220,11 @@ fn execute_clear_statement(
 
 fn execute_return_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &ReturnStatement,
 ) -> Next {
 	Next::Return(match &stmt.value {
-		Some(value) => match execute_value(functions, scope, &value) {
+		Some(value) => match execute_value(functions, stack, &value) {
 			Next::Append(output) => output,
 			Next::Proceed => unreachable!(),
 			other => return other,
@@ -215,37 +235,39 @@ fn execute_return_statement(
 
 fn execute_for_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &ForStatement,
 ) -> Next {
-	let mut inner = Scope::new(Some(scope));
-	let mut output = Output::new_truthy();
-	let list = evaluate!(execute_value(functions, &mut inner, &stmt.list));
-	let split = match &stmt.split {
-		None => None,
-		Some(split) => Some(evaluate!(execute_value(functions, &mut inner, split))),
-	};
-	for value in list.split_iter(&split) {
-		inner.set_var(&stmt.variable, &Output::new(value.to_owned(), 0));
-		let mut inner = Scope::new(Some(&mut inner));
-		output.append(evaluate!(execute_value(
-			functions,
-			&mut inner,
-			&stmt.output
-		)));
-	}
-	Next::Append(output)
+	scoped!(stack, {
+		let mut output = Output::new_truthy();
+		let list = evaluate!(execute_value(functions, stack, &stmt.list));
+		let split = match &stmt.split {
+			None => None,
+			Some(split) => Some(evaluate!(execute_value(functions, stack, split))),
+		};
+		for value in list.split_iter(&split) {
+			stack.set_var(&stmt.variable, Output::new(value.to_owned(), 0));
+			proceed!(scoped!(stack, {
+				output.append(evaluate!(execute_value(
+					functions,
+					stack,
+					&stmt.output
+				)));
+				Next::Proceed
+			}));
+		}
+		Next::Append(output)
+	})
 }
 
 fn execute_if_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &IfStatement,
 ) -> Next {
-	let mut inner = Scope::new(Some(scope));
-	let condition = evaluate!(execute_value(functions, &mut inner, &stmt.condition));
+	let condition = evaluate!(execute_value(functions, stack, &stmt.condition));
 	if condition.is_truthy() {
-		execute_value(functions, scope, &stmt.output)
+		execute_value(functions, stack, &stmt.output)
 	} else {
 		Next::Append(Output::new_falsy())
 	}
@@ -253,45 +275,44 @@ fn execute_if_statement(
 
 fn execute_if_else_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	stmt: &IfElseStatement,
 ) -> Next {
-	let mut inner = Scope::new(Some(scope));
-	let condition = evaluate!(execute_value(functions, &mut inner, &stmt.condition));
+	let condition = evaluate!(execute_value(functions, stack, &stmt.condition));
 	if condition.is_truthy() {
-		execute_value(functions, scope, &stmt.output_true)
+		execute_value(functions, stack, &stmt.output_true)
 	} else {
-		execute_value(functions, scope, &stmt.output_false)
+		execute_value(functions, stack, &stmt.output_false)
 	}
 }
 
 fn execute_control_statement(
 	functions: &FunctionLibrary,
-	scope: &mut Scope<'_>,
+	stack: &mut ScopeStack,
 	control: &ControlStatement,
 ) -> Next {
 	match control {
-		ControlStatement::ForStatement(stmt) => execute_for_statement(functions, scope, stmt),
-		ControlStatement::IfStatement(stmt) => execute_if_statement(functions, scope, stmt),
+		ControlStatement::ForStatement(stmt) => execute_for_statement(functions, stack, stmt),
+		ControlStatement::IfStatement(stmt) => execute_if_statement(functions, stack, stmt),
 		ControlStatement::IfElseStatement(stmt) => {
-			execute_if_else_statement(functions, scope, stmt)
+			execute_if_else_statement(functions, stack, stmt)
 		}
 	}
 }
 
-fn execute_statements<'a>(
+fn execute_statements(
 	functions: &FunctionLibrary,
-	scope: &'a mut Scope<'a>,
+	stack: &mut ScopeStack,
 	execs: &[Execution],
 ) -> Next {
 	let mut output = Output::new_truthy();
 	for exec in execs.iter() {
 		let next = match exec {
-			Execution::Block(block) => execute_block(functions, scope, block).supress(),
+			Execution::Block(block) => execute_block(functions, stack, block).supress(),
 			Execution::ControlStatement(control) => {
-				execute_control_statement(functions, scope, control).supress()
+				execute_control_statement(functions, stack, control).supress()
 			}
-			Execution::OpenStatement(open) => execute_open_statement(functions, scope, open),
+			Execution::OpenStatement(open) => execute_open_statement(functions, stack, open),
 		};
 		match next {
 			Next::Proceed => continue,
@@ -303,14 +324,14 @@ fn execute_statements<'a>(
 	Next::Append(output)
 }
 
-impl<'a> Runtime<'a> {
-	pub fn new() -> Runtime<'a> {
+impl Runtime {
+	pub fn new() -> Runtime {
 		Runtime {
 			functions: FunctionLibrary::new(),
-			global_scope: Scope::new(None),
+			global_scope: HashMap::new(),
 		}
 	}
-	pub fn execute(&'a mut self, program: Program) {
+	pub fn execute(&mut self, program: Program) {
 		for func in program.functions {
 			let res = self.functions.register_function(
 				&func.name,
@@ -322,10 +343,10 @@ impl<'a> Runtime<'a> {
 				Err(err) => eprintln!("[runtime] {}", err),
 			}
 		}
-		let glob = &mut self.global_scope;
+		let mut glob = ScopeStack::new(&mut self.global_scope);
 
 		let start = Instant::now();
-		let res = execute_statements(&self.functions, glob, &program.executions);
+		let res = execute_statements(&self.functions, &mut glob, &program.executions);
 		let duration = start.elapsed();
 
 		println!("[runtime] Execution finished in {:?}", duration);

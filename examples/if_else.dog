@@ -1,3 +1,3 @@
-put if { true } "Hello";
+put if { true } "Hello ";
 put if { false } "never!";
 put if { true } "World!" else "never!";

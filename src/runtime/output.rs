@@ -9,6 +9,14 @@ pub enum OutputSplitIterator<'a> {
     SplitWhitespace(std::str::SplitWhitespace<'a>),
 }
 
+pub fn join_outputs(outputs: &[Output]) -> String {
+	outputs
+		.iter()
+		.map(|output| output.value.clone())
+		.collect::<Vec<String>>()
+		.join(" ")
+}
+
 impl Output {
 	pub fn new(value: String, code: i32) -> Output {
 		Output { value, code }
