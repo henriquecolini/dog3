@@ -1,3 +1,0 @@
-for i in {put "a,b,c,d,e"} split {put ','} {
-	println "($i)"
-}

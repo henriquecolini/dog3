@@ -6,25 +6,6 @@ use std::time::Instant;
 
 use super::format_string::FormatString;
 
-#[macro_export]
-macro_rules! params {
-    ($($param:expr),*) => {{
-		#[allow(unused_mut)]
-        let mut parameters = Vec::new();
-        $(
-            let vector = $param.starts_with('%');
-            let name = $param.trim_start_matches('%').to_string();
-            let formal_param = if vector {
-				$crate::parser::parser::FormalParameter::new_vector(&name)
-			} else {
-				$crate::parser::parser::FormalParameter::new(&name)
-			};
-            parameters.push(formal_param);
-        )*
-        parameters
-    }};
-}
-
 #[derive(Parser)]
 #[grammar = "parser/grammar.pest"]
 #[derive(Debug)]
@@ -66,6 +47,7 @@ pub enum ControlStatement {
 	ForStatement(ForStatement),
 	IfStatement(IfStatement),
 	IfElseStatement(IfElseStatement),
+	WhileStatement(WhileStatement),
 }
 
 #[derive(Debug)]
@@ -102,6 +84,12 @@ pub struct IfElseStatement {
 	pub(crate) condition: Value,
 	pub(crate) output_true: Value,
 	pub(crate) output_false: Value,
+}
+
+#[derive(Debug)]
+pub struct WhileStatement {
+	pub(crate) condition: Value,
+	pub(crate) output: Value,
 }
 
 #[derive(Debug)]
@@ -277,6 +265,27 @@ fn build_if_else_stmt(entry: Pair<'_, Rule>) -> IfElseStatement {
 	}
 }
 
+fn build_while_stmt(entry: Pair<'_, Rule>) -> WhileStatement {
+	let mut condition = Value::String(FormatString::raw(""));
+	let mut output = Value::String(FormatString::raw(""));
+	let mut value_index = 0;
+	for pair in entry.into_inner() {
+		match pair.as_rule() {
+			Rule::Value => {
+				match value_index {
+					0 => condition = build_value(pair),
+					1 => output = build_value(pair),
+					_ => unreachable!(),
+				}
+				value_index += 1
+			}
+			Rule::While => continue,
+			_ => unreachable!(),
+		}
+	}
+	WhileStatement { condition, output }
+}
+
 fn build_control_stmt(entry: Pair<'_, Rule>) -> ControlStatement {
 	for pair in entry.into_inner() {
 		match pair.as_rule() {
@@ -286,6 +295,7 @@ fn build_control_stmt(entry: Pair<'_, Rule>) -> ControlStatement {
 			}
 			Rule::IfStmt => return ControlStatement::IfStatement(build_if_stmt(pair)),
 			Rule::IfElseStmt => return ControlStatement::IfElseStatement(build_if_else_stmt(pair)),
+			Rule::WhileStmt => return ControlStatement::WhileStatement(build_while_stmt(pair)),
 			_ => unreachable!(),
 		}
 	}

@@ -1,0 +1,14 @@
+// Basic operations
+pln { add 1 2 3 };
+pln { sub 10 1 1 };
+pln { mul 10 10 10 };
+pln { div 100 2 2 };
+
+// Edge cases
+pln { div 1 0 };
+pln { add 10 inf };
+pln { sub inf inf };
+pln { add word 10 };
+
+pln if { add 1 1 } "1+1 works" else "1+1 doesn't work";
+pln if { add 1 text } "1+text works" else "1+text doesn't work";

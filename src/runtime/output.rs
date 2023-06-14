@@ -43,7 +43,7 @@ impl Output {
 		self.value += &other.value;
 		self.code = other.code;
 	}
-	pub fn split_iter<'a>(&'a self, arg: &'a Option<Output>) -> OutputSplitIterator<'a> {
+	pub fn split_iter<'a>(&'a self, arg: Option<&'a Output>) -> OutputSplitIterator<'a> {
 		match arg {
 			Some(arg) => OutputSplitIterator::Split(self.value.split(&arg.value)),
 			None => OutputSplitIterator::SplitWhitespace(self.value.split_whitespace()),

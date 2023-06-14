@@ -1,0 +1,5 @@
+x = 10;
+pln while { gt $x 0 } {
+	put "$x ";
+	x = { sub $x 1 };
+}

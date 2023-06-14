@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fmt::Display, fs, path::PathBuf, process::ExitCode};
 
 use clap::Parser;
 use dog3::{
@@ -19,11 +19,31 @@ enum Error {
 	Library(RegisterError),
 }
 
-fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
-	runtime.functions.register_library(dogs::std::build())
+impl Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Error::IO(err) => {
+				write!(f, "error: Failed to read input files.\n{}", err)
+			}
+			Error::Syntax(err) => {
+				write!(f, "error: Incorrect syntax.\n{}", err)
+			}
+			Error::Library(err) => {
+				write!(f, "error: Failed to load standard libraries.\n{}", err)
+			}
+		}
+	}
 }
 
-fn main() -> Result<(), Error> {
+fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
+	runtime.functions.register_library(dogs::std::build())?;
+	runtime.functions.register_library(dogs::status::build())?;
+	runtime.functions.register_library(dogs::iter::build())?;
+	runtime.functions.register_library(dogs::math::build())?;
+	runtime.functions.register_library(dogs::logic::build())
+}
+
+fn run() -> Result<(), Error> {
 	let args = Args::parse();
 	let mut inputs = vec![];
 	for path in args.inputs {
@@ -44,4 +64,14 @@ fn main() -> Result<(), Error> {
 	};
 	runtime.execute(program);
 	Ok(())
+}
+
+fn main() -> ExitCode {
+	match run() {
+		Ok(_) => ExitCode::SUCCESS,
+		Err(err) => {
+			println!("{}", err);
+			ExitCode::FAILURE
+		},
+	}
 }

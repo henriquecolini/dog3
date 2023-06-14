@@ -245,7 +245,7 @@ fn execute_for_statement(
 			None => None,
 			Some(split) => Some(evaluate!(execute_value(functions, stack, split))),
 		};
-		for value in list.split_iter(&split) {
+		for value in list.split_iter(split.as_ref()) {
 			stack.set_var(&stmt.variable, Output::new(value.to_owned(), 0));
 			proceed!(scoped!(stack, {
 				output.append(evaluate!(execute_value(
@@ -286,6 +286,27 @@ fn execute_if_else_statement(
 	}
 }
 
+fn execute_while_statement(
+	functions: &FunctionLibrary,
+	stack: &mut ScopeStack,
+	stmt: &WhileStatement,
+) -> Next {
+	let mut output = Output::new_truthy();
+	let mut condition = evaluate!(execute_value(functions, stack, &stmt.condition));
+	while condition.is_truthy() {
+		proceed!(scoped!(stack, {
+			output.append(evaluate!(execute_value(
+				functions,
+				stack,
+				&stmt.output
+			)));
+			Next::Proceed
+		}));
+		condition = evaluate!(execute_value(functions, stack, &stmt.condition));
+	}
+	Next::Append(output)
+}
+
 fn execute_control_statement(
 	functions: &FunctionLibrary,
 	stack: &mut ScopeStack,
@@ -296,7 +317,8 @@ fn execute_control_statement(
 		ControlStatement::IfStatement(stmt) => execute_if_statement(functions, stack, stmt),
 		ControlStatement::IfElseStatement(stmt) => {
 			execute_if_else_statement(functions, stack, stmt)
-		}
+		},
+		ControlStatement::WhileStatement(stmt) => execute_while_statement(functions, stack, stmt),
 	}
 }
 

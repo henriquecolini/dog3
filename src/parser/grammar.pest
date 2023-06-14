@@ -10,22 +10,26 @@ SQuote  = { "'" }
 Equals  = { "=" }
 Dollar  = { "$" }
 Destroy = { "%" }
+Comment = { "//" }
+LComment = { "/*" }
+RComment = { "*/" }
 RESERVED = _{ "[" | "]" | "`" | "&" }
-SPECIAL = _{ ";" | "," | "{" | "}" | "(" | ")" | "\\" | "\"" | "'" | "=" | "$" | "%" | RESERVED }
+SPECIAL = _{ ";" | "," | "{" | "}" | "(" | ")" | "\\" | "\"" | "'" | "=" | "$" | "%" | "//" | "/*" | "*/" | RESERVED }
 
 // Keywords
 If      =  { "if" }
 Else    =  { "else" }
+While   =  { "while" }
 Fn      =  { "fn" }
 For     =  { "for" }
 In      =  { "in" }
 Split   =  { "split" }
 Clear   =  { "clear" }
 Return  =  { "return" }
-KEYWORD = _{ If | Else | Fn | For | In | Split | Clear | Return }
+KEYWORD = _{ If | Else | While | Fn | For | In | Split | Clear | Return }
 
 // Strings
-IDENTIFIER = _{ !KEYWORD ~ (!SPECIAL ~ !WHITE_SPACE ~ ANY)+ }
+IDENTIFIER = _{ !(KEYWORD ~ (WHITE_SPACE|EOI)) ~ (!SPECIAL ~ !WHITE_SPACE ~ ANY)+ }
 VARIABLE   = _{ Dollar ~ (Destroy?) ~ IDENTIFIER }
 ESC        = _{ "\\" ~ ("\\" | "n" | "r" | "t") }
 SQ_ESC     = _{ "\\'" }
@@ -38,11 +42,16 @@ SQuoteString = @{ !KEYWORD ~ SQuote ~ (ESC | SQ_ESC | !("\\" | "'") ~ ANY)* ~ SQ
 DQuoteString = @{ !KEYWORD ~ DQuote ~ (ESC | DQ_ESC | VARIABLE | VAR_ESC | (!("\\" | DQuote | "$" | "%") ~ ANY) )* ~ DQuote }
 OpenString   = @{ !KEYWORD ~          (ESC | OS_ESC | VARIABLE | VAR_ESC | (!("\\" | SPECIAL | WHITE_SPACE) ~ ANY))+ }
 
-WHITESPACE = _{ WHITE_SPACE }
+// Comments and whitespace
+
+LineComment  = _{ Comment ~ (!"\n"~ANY)* }
+BlockComment = _{ LComment ~ (BlockComment | !RComment ~ ANY)* ~ RComment }
+COMMENT      = _{ LineComment | BlockComment }
+WHITESPACE   = _{ WHITE_SPACE }
 
 // Main Parser
 
-Program    = { (ControlStmt ~ Semi* | Function ~ Semi* | Block ~ Semi* | OpenStmt ~ Semi+)* ~ (OpenStmt ~ Semi?)? ~ EOI }
+Program    = { SOI ~ ((ControlStmt ~ Semi* | Function ~ Semi* | Block ~ Semi* | OpenStmt ~ Semi+)* ~ (OpenStmt ~ Semi?)?) ~ EOI }
 Executions = { (ControlStmt ~ Semi* | Block ~ Semi* | OpenStmt ~ Semi+)* ~ (OpenStmt ~ Semi?)? }
 
 String = { OpenString | Identifier | SQuoteString | DQuoteString }
@@ -54,11 +63,12 @@ Block = { LCurly ~ Executions ~ RCurly }
 
 // Control Statements
 
-ControlStmt  = { ForStmt | ForSplitStmt | IfElseStmt | IfStmt }
+ControlStmt  = { ForStmt | ForSplitStmt | IfElseStmt | IfStmt | WhileStmt }
 ForStmt      = { For ~ Identifier ~ In ~ Value ~ Value }
 ForSplitStmt = { For ~ Identifier ~ In ~ Value ~ Split ~ Value ~ Value }
 IfStmt       = { If ~ Value ~ Value }
 IfElseStmt   = { If ~ Value ~ Value ~ Else ~ Value }
+WhileStmt    = { While ~ Value ~ Value }
 
 // Open Statements
 

@@ -1,0 +1,10 @@
+// Line comments
+pln I love line comments!; // It works here too!
+pln "//this is not a comment"; // and here!
+
+/* Block comments
+pln this is all commented!
+pln you'll never see me! /* nor me! */
+*/
+pln I love block comments!; /* It works here too! */
+pln "/*this is not a comment*/"; /* and here! */
