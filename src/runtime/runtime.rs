@@ -1,8 +1,8 @@
-use std::{fmt::Display, time::Instant, collections::HashMap};
+use std::{collections::HashMap, fmt::Display};
 
 use crate::parser::{format_string::*, parser::*};
 
-use super::{functions::*, scope::*, output::*, scope::ScopeStack};
+use super::{functions::*, output::*, scope::ScopeStack, scope::*};
 
 pub struct Runtime {
 	pub functions: FunctionLibrary,
@@ -31,16 +31,13 @@ pub enum ExecutionError {
 }
 
 macro_rules! scoped {
-    ($stack:expr, $block:block) => {
-        {
-            $stack.push();
-            let res = (|| $block)();
-            $stack.pop();
-            res
-        }
-    };
+	($stack:expr, $block:block) => {{
+		$stack.push();
+		let res = (|| $block)();
+		$stack.pop();
+		res
+	}};
 }
-
 
 impl Next {
 	fn supress(self) -> Next {
@@ -117,7 +114,9 @@ fn execute_value(functions: &FunctionLibrary, stack: &mut ScopeStack, value: &Va
 }
 
 fn execute_block(functions: &FunctionLibrary, stack: &mut ScopeStack, block: &Block) -> Next {
-	scoped!(stack, {execute_statements(functions, stack, &block.executions)})
+	scoped!(stack, {
+		execute_statements(functions, stack, &block.executions)
+	})
 }
 
 fn execute_open_statement(
@@ -195,7 +194,7 @@ fn execute_command_statement(
 			let res = execute_block(functions, &mut func_stack, block);
 			let res = match res {
 				Next::Return(out) => Next::Append(out),
-				other => other
+				other => other,
 			};
 			return res;
 		}
@@ -248,11 +247,7 @@ fn execute_for_statement(
 		for value in list.split_iter(split.as_ref()) {
 			stack.set_var(&stmt.variable, Output::new(value.to_owned(), 0));
 			proceed!(scoped!(stack, {
-				output.append(evaluate!(execute_value(
-					functions,
-					stack,
-					&stmt.output
-				)));
+				output.append(evaluate!(execute_value(functions, stack, &stmt.output)));
 				Next::Proceed
 			}));
 		}
@@ -295,11 +290,7 @@ fn execute_while_statement(
 	let mut condition = evaluate!(execute_value(functions, stack, &stmt.condition));
 	while condition.is_truthy() {
 		proceed!(scoped!(stack, {
-			output.append(evaluate!(execute_value(
-				functions,
-				stack,
-				&stmt.output
-			)));
+			output.append(evaluate!(execute_value(functions, stack, &stmt.output)));
 			Next::Proceed
 		}));
 		condition = evaluate!(execute_value(functions, stack, &stmt.condition));
@@ -317,7 +308,7 @@ fn execute_control_statement(
 		ControlStatement::IfStatement(stmt) => execute_if_statement(functions, stack, stmt),
 		ControlStatement::IfElseStatement(stmt) => {
 			execute_if_else_statement(functions, stack, stmt)
-		},
+		}
 		ControlStatement::WhileStatement(stmt) => execute_while_statement(functions, stack, stmt),
 	}
 }
@@ -353,31 +344,24 @@ impl Runtime {
 			global_scope: HashMap::new(),
 		}
 	}
-	pub fn execute(&mut self, program: Program) {
+	pub fn execute(&mut self, program: Program) -> Result<Output, ExecutionError> {
 		for func in program.functions {
 			let res = self.functions.register_function(
 				&func.name,
 				func.args,
 				Runnable::Block(func.block),
 			);
-			match res {
-				Ok(msg) => println!("[runtime] {}", msg),
-				Err(err) => eprintln!("[runtime] {}", err),
+			if let Err(err) = res {
+				eprintln!("{}", err);
 			}
 		}
 		let mut glob = ScopeStack::new(&mut self.global_scope);
-
-		let start = Instant::now();
 		let res = execute_statements(&self.functions, &mut glob, &program.executions);
-		let duration = start.elapsed();
-
-		println!("[runtime] Execution finished in {:?}", duration);
-
 		match res {
-			Next::Append(output) => println!("{}", output.value),
-			Next::Return(output) => println!("{}", output.value),
-			Next::Abort(err) => eprintln!("[runtime] {}", err),
-			_ => {}
+			Next::Append(output) => Ok(output),
+			Next::Return(output) => Ok(output),
+			Next::Abort(err) => Err(err),
+			_ => Err(ExecutionError::InternalError),
 		}
 	}
 }

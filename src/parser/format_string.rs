@@ -1,16 +1,4 @@
-#[derive(Debug, Clone)]
-pub struct Range {
-	begin: usize,
-	end: usize,
-}
-impl Range {
-	fn slice<'a>(&'a self, value: &'a str) -> &'a str {
-		&value[self.begin..self.end + 1]
-	}
-	fn grow(&mut self) {
-		self.end += 1;
-	}
-}
+use super::str_range::Range;
 
 #[derive(Debug, Clone)]
 pub struct FormatString {
@@ -43,8 +31,22 @@ fn is_special(c: char) -> bool {
 	}
 }
 
-fn is_identifier_boundary(c: char) -> bool {
-	c != '%' && (is_special(c) || c.is_whitespace())
+fn is_identifier_boundary(c: Option<char>) -> bool {
+	match c {
+		Some(c) => c != '%' && (is_special(c) || c.is_whitespace()),
+		None => true,
+	}
+}
+
+fn is_raw_boundary(c: Option<char>, expand_variables: bool) -> bool {
+	match c {
+		Some(c) => expand_variables && is_identifier_start(Some(c)),
+		None => true,
+	}
+}
+
+fn is_identifier_start(c: Option<char>) -> bool {
+	c == Some('$')
 }
 
 fn escape(c: char) -> char {
@@ -58,24 +60,28 @@ fn escape(c: char) -> char {
 
 fn remove_ends<'a>(raw: &'a str) -> &'a str {
 	match raw.chars().next() {
-		Some(c) => {
-			match c {
-				'\'' | '"' => {
-					if raw.len() < 2 {
-						""
-					}
-					else {
-						&raw[1..raw.len()-1]
-					}
-				},
-				_ => raw
+		Some(c) => match c {
+			'\'' | '"' => {
+				if raw.len() < 2 {
+					""
+				} else {
+					&raw[1..raw.len() - 1]
+				}
 			}
+			_ => raw,
 		},
 		None => raw,
 	}
 }
 
-impl Region {}
+impl Region {
+    fn range(&self) -> &Range {
+        match self {
+            Region::Raw(r) => r,
+            Region::Variable(r) => r,
+        }
+    }
+}
 
 impl FormatString {
 	pub fn raw(value: &str) -> FormatString {
@@ -93,25 +99,18 @@ impl FormatString {
 		let mut current_region = None;
 		let mut iter = raw.chars();
 
-		while let Some(c) = iter.next() {
-			let c = if c == '\\' {
-				match iter.next() {
-					Some(c) => escape(c),
-					None => break,
-				}
-			} else {
-				c
+		loop {
+			let c = match iter.next() {
+				Some('\\') => match iter.next() {
+					Some(c) => Some(escape(c)),
+					c => c,
+				},
+				c => c,
 			};
+			let is_identifier_start = expand_variables && is_identifier_start(c);
 			let is_identifier_boundary = is_identifier_boundary(c);
-			let is_raw_boundary = expand_variables && c == '$';
-			let c = if is_raw_boundary {
-				match iter.next() {
-					Some(c) => c,
-					None => break,
-				}
-			} else {
-				c
-			}; 
+			let is_raw_boundary = is_raw_boundary(c, expand_variables);
+			let c = if is_identifier_start { iter.next() } else { c };
 			if let Some(region) = &mut current_region {
 				match region {
 					Region::Raw(ref mut range) => {
@@ -119,7 +118,7 @@ impl FormatString {
 							target.regions.push(current_region.unwrap());
 							current_region = None;
 						} else {
-							range.grow();
+							range.grow(c);
 						}
 					}
 					Region::Variable(ref mut range) => {
@@ -127,27 +126,23 @@ impl FormatString {
 							target.regions.push(current_region.unwrap());
 							current_region = None
 						} else {
-							range.grow();
+							range.grow(c);
 						}
 					}
 				}
 			}
 			if current_region.is_none() {
-				let len = target.value.len();
-				let range = Range {
-					begin: len,
-					end: len,
-				};
+				let range = Range::first_after(target.regions.last().map(|re| re.range()), c);
 				current_region = Some(if is_raw_boundary {
 					Region::Variable(range)
 				} else {
 					Region::Raw(range)
 				});
 			}
-			target.value.push(c);
-		}
-		if let Some(region) = current_region {
-			target.regions.push(region);
+			match c {
+				Some(c) => target.value.push(c),
+				None => break,
+			}
 		}
 		target
 	}

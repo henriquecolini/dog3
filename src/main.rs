@@ -62,7 +62,10 @@ fn run() -> Result<(), Error> {
 		Ok(program) => program,
 		Err(err) => return Err(Error::Syntax(err)),
 	};
-	runtime.execute(program);
+	match runtime.execute(program) {
+		Ok(output) => print!("{}", output.value),
+		Err(err) => eprintln!("{}", err)
+	}
 	Ok(())
 }
 

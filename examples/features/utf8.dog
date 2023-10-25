@@ -1,0 +1,13 @@
+pln Hello world!;
+pln ¡Hola mundo!;
+pln Bonjour le monde!;
+pln Hallo Welt!;
+pln 你好 世界！;
+pln Привет мир!;
+pln こんにちは 世界！;
+pln مرحبًا بالعالم!;
+pln नमस्ते दुनिया!;
+pln Γειά σας κόσμε!;
+
+cão = 10;
+pln cão é $cão !

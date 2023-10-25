@@ -2,7 +2,6 @@ use pest::error::Error;
 use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
-use std::time::Instant;
 
 use super::format_string::FormatString;
 
@@ -458,18 +457,8 @@ fn build_program(entry: Pair<'_, Rule>) -> Program {
 }
 
 pub fn parse(input: &str) -> Result<Program, Error<Rule>> {
-	let start = Instant::now();
 	let mut pairs = Dog3Parser::parse(Rule::Program, input)?;
-	let duration = start.elapsed();
-
-	println!("[parser] Parse tree generated in {:?}", duration);
-
-	let start = Instant::now();
 	let root = pairs.next().unwrap();
 	let program = build_program(root);
-	let duration = start.elapsed();
-
-	println!("[parser] Syntax tree generated in {:?}", duration);
-
 	Ok(program)
 }
