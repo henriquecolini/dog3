@@ -4,6 +4,9 @@ use crate::{
 
 fn status(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
+		[value] => {
+			Ok(Output::new(value.code.to_string(), value.code))
+		}
 		[value, status] => {
 			let status = status.value.parse();
 			Ok(Output::new(
@@ -20,6 +23,7 @@ fn status(args: &[Output]) -> Result<Output, ExecutionError> {
 
 pub fn build() -> FunctionLibrary {
 	let mut library = FunctionLibrary::new();
+	builtin!(library, status, "value");
 	builtin!(library, status, "value", "status");
 	library
 }
