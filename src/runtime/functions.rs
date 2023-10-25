@@ -72,18 +72,17 @@ impl FunctionLibrary {
 	) -> Result<String, RegisterError> {
 		let current = self.functions.get_mut(name);
 		let anon = AnonymousFunction::new(args, runnable);
+
 		match current {
-			Some(funcs) => match funcs.iter().find(|a| a.collides(&anon)) {
-				Some(_) => Err(RegisterError::AlreadyExists),
-				None => {
-					let (min, max) = (anon.min_args, anon.max_args);
-					funcs.push(anon);
-					Ok(format!(
-						"Registered overload for `{}` ({}-{} args)",
-						name, min, max
-					))
-				}
-			},
+			Some(funcs) => {
+				funcs.retain(|a| !a.collides(&anon));
+				let (min, max) = (anon.min_args, anon.max_args);
+				funcs.push(anon);
+				Ok(format!(
+					"Registered overload for `{}` ({}-{} args)",
+					name, min, max
+				))
+			}
 			None => {
 				let (min, max) = (anon.min_args, anon.max_args);
 				self.functions.insert(name.to_owned(), vec![anon]);
@@ -94,12 +93,9 @@ impl FunctionLibrary {
 			}
 		}
 	}
-	pub fn register_library(
-		&mut self,
-		other: FunctionLibrary,
-	) -> Result<String, RegisterError> {
+	pub fn register_library(&mut self, other: FunctionLibrary) -> Result<String, RegisterError> {
 		let mut count = 0;
-		for (name,anons) in other.functions.into_iter() {
+		for (name, anons) in other.functions.into_iter() {
 			for func in anons {
 				count += 1;
 				self.register_function(&name, func.args, func.runnable)?;

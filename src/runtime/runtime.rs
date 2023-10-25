@@ -27,6 +27,7 @@ pub enum Next {
 pub enum ExecutionError {
 	UndeclaredVariable(String),
 	UndefinedFunction(String),
+	UndefinedOverload(String, usize),
 	InternalError,
 }
 
@@ -66,6 +67,9 @@ impl Display for ExecutionError {
 			}
 			ExecutionError::UndefinedFunction(func) => {
 				write!(f, "error: Use of undefined function `{}`", func)
+			}
+			ExecutionError::UndefinedOverload(func, arg_c) => {
+				write!(f, "error: no overload for function `{}` takes `{}` arguments", func, arg_c)
 			}
 			ExecutionError::InternalError => write!(f, "error: Internal runtime error"),
 		}
@@ -156,30 +160,30 @@ fn execute_command_statement(
 		Some(value) => value,
 		None => return Next::Abort(ExecutionError::UndefinedFunction(stmt.name.to_owned())),
 	};
-	let mut outputs = vec![];
-	for arg in &stmt.parameters {
-		let output = evaluate!(execute_value(functions, stack, &arg.value));
-		outputs.push(output);
-	}
-	let count = outputs.len();
+	let count = stmt.parameters.len();
 	let func = func_list
 		.iter()
 		.find(|x| x.max_args >= count && x.min_args <= count);
 	let func = match func {
 		Some(func) => func,
-		None => return Next::Abort(ExecutionError::UndefinedFunction(stmt.name.to_owned())),
+		None => return Next::Abort(ExecutionError::UndefinedOverload(stmt.name.to_owned(), count)),
 	};
+	let mut outputs = vec![];
+	for arg in &stmt.parameters {
+		let output = evaluate!(execute_value(functions, stack, &arg.value));
+		outputs.push(output);
+	}
 	match &func.runnable {
 		Runnable::Block(block) => {
 			let mut func_stack = ScopeStack::new_sibling(stack);
 			for (i, arg) in func.args.iter().enumerate() {
-				if i == func.args.len() {
+				if arg.vector {
 					let joined_values = outputs
 						.iter()
 						.map(|output| output.value.clone())
 						.collect::<Vec<String>>()
 						.join(" ");
-					let last_code = outputs.last().unwrap().code;
+					let last_code = outputs.last().map(|o| o.code).unwrap_or(0);
 					func_stack.set_var(
 						&arg.name,
 						Output {
@@ -187,6 +191,7 @@ fn execute_command_statement(
 							code: last_code,
 						},
 					);
+					break;
 				} else {
 					func_stack.set_var(&arg.name, outputs.remove(0))
 				}
