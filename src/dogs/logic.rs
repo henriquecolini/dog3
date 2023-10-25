@@ -144,6 +144,6 @@ pub fn build() -> FunctionLibrary {
 	builtin!(library, like, "a", "b");
 	builtin!(library, and, "a", "b");
 	builtin!(library, or, "a", "b");
-	builtin!(library, not, "a", "b");
+	builtin!(library, not, "a");
 	library
 }
