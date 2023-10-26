@@ -288,3 +288,15 @@ Here are all the functions you can currently use. The list is small as the langu
 | min first %others | Outputs decimal float min(`first`, `others`) | truthy if all arguments are numbers, falsy otherwise
 | floor x | Outputs decimal float floor(`x`) | truthy if all arguments are numbers, falsy otherwise
 | ceil x | Outputs decimal float ceil(`first`) | truthy if all arguments are numbers, falsy otherwise
+| random max | Outputs integer random number between 0 (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
+| random min max | Outputs integer random number between `min` (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
+
+### Module `net`
+
+| Function | Description | Status |
+| -------- | ----------- | ------ |
+| get url | Outputs the response of an HTTP GET request on `url` | the status code of the response, unless it was 200, in which case truthy
+| get url timeout | Outputs the response of an HTTP GET request on `url`, waiting for at most `timeout` seconds | the status code of the response, unless it was 200, in which case truthy
+| post url | Outputs the response of an HTTP POST request on `url` | the status code of the response, unless it was 200, in which case truthy
+| post url body | Outputs the response of an HTTP POST request on `url`, with body `body` | the status code of the response, unless it was 200, in which case truthy
+| post url body timeout | Outputs the response of an HTTP POST request on `url`, with body `body`, waiting for at most `timeout` seconds | the status code of the response, unless it was 200, in which case truthy

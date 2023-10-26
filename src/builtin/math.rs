@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::{
 	builtin,
 	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
@@ -128,6 +130,25 @@ fn ceil(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
+fn random(args: &[Output]) -> Result<Output, ExecutionError> {
+	let (min, max) = match args {
+		[max] => (Ok(0), max.value.parse::<isize>()),
+		[min, max] => (min.value.parse::<isize>(), max.value.parse::<isize>()),
+		_ => return Err(ExecutionError::InternalError),
+	};
+	Ok(match (min, max) {
+		(Ok(min), Ok(max)) => Output::new_truthy_with(
+			if min >= max {
+				min
+			} else {
+				rand::thread_rng().gen_range(min..max)
+			}
+			.to_string(),
+		),
+		_ => Output::new_falsy(),
+	})
+}
+
 pub fn build() -> FunctionLibrary {
 	let mut library = FunctionLibrary::new();
 	builtin!(library, add, "first", "%others");
@@ -138,5 +159,7 @@ pub fn build() -> FunctionLibrary {
 	builtin!(library, min, "first", "%others");
 	builtin!(library, floor, "x");
 	builtin!(library, ceil, "x");
+	builtin!(library, random, "max");
+	builtin!(library, random, "min", "max");
 	library
 }
