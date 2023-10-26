@@ -1,0 +1,29 @@
+fn tab (%content) {
+    put for line in $content split "\n" {
+        pln "    $line";
+    } 
+}
+
+fn tag (tag, %content) {
+    put <$tag;
+    pln >;
+    tab $content;
+    put </$tag;
+    pln >;
+}
+
+fn div (%content) { tag div $content }
+fn p (%content) { tag p $content }
+fn h1 (%content) { tag h1 $content }
+
+fn PersonCard (name, age) {
+    div {
+        h1 $name;
+        p Age $age;
+    }
+}
+
+div {
+    PersonCard "John" 30;
+    PersonCard "Jane" 25;
+};

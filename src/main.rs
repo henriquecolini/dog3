@@ -37,9 +37,6 @@ impl Display for Error {
 
 fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
 	runtime.functions.register_library(builtin::std::build())?;
-	runtime
-		.functions
-		.register_library(builtin::status::build())?;
 	runtime.functions.register_library(builtin::iter::build())?;
 	runtime.functions.register_library(builtin::math::build())?;
 	runtime.functions.register_library(builtin::logic::build())
