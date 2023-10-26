@@ -1,6 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::grammar::{Block, FormalParameter};
+use itertools::Itertools;
+
+use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};
 
@@ -16,6 +18,7 @@ pub struct AnonymousFunction {
 	pub min_args: usize,
 	pub max_args: usize,
 	pub runnable: Runnable,
+	pub script: Option<String>,
 }
 
 pub struct FunctionLibrary {
@@ -38,7 +41,11 @@ impl Display for RegisterError {
 }
 
 impl AnonymousFunction {
-	fn new(args: Vec<FormalParameter>, runnable: Runnable) -> AnonymousFunction {
+	fn new(
+		args: Vec<FormalParameter>,
+		runnable: Runnable,
+		script: Option<String>,
+	) -> AnonymousFunction {
 		let mut has_vector = false;
 		for arg in args.iter() {
 			if arg.vector {
@@ -55,6 +62,7 @@ impl AnonymousFunction {
 			max_args,
 			args,
 			runnable,
+			script,
 		}
 	}
 	fn collides(&self, other: &AnonymousFunction) -> bool {
@@ -74,14 +82,33 @@ impl FunctionLibrary {
 			functions: HashMap::new(),
 		}
 	}
-	pub fn register_function(
+	pub fn add_builtin(&mut self, name: &str, args: Vec<FormalParameter>, runnable: BuiltIn) {
+		let _ = self.add(name, args, Runnable::BuiltIn(runnable), None);
+	}
+	pub fn add_script(&mut self, runnable: Function) -> Result<String, RegisterError> {
+		self.add(
+			&runnable.name,
+			runnable.args,
+			Runnable::Block(runnable.block),
+			Some(runnable.script),
+		)
+	}
+
+	pub fn add_scripts(&mut self, functions: Vec<Function>) -> Result<(), RegisterError> {
+		for func in functions {
+			self.add_script(func)?;
+		}
+		Ok(())
+	}
+	fn add(
 		&mut self,
 		name: &str,
 		args: Vec<FormalParameter>,
 		runnable: Runnable,
+		script: Option<String>,
 	) -> Result<String, RegisterError> {
 		let current = self.functions.get_mut(name);
-		let anon = AnonymousFunction::new(args, runnable);
+		let anon = AnonymousFunction::new(args, runnable, script);
 
 		match current {
 			Some(funcs) => {
@@ -106,12 +133,12 @@ impl FunctionLibrary {
 			}
 		}
 	}
-	pub fn register_library(&mut self, other: FunctionLibrary) -> Result<String, RegisterError> {
+	pub fn merge(&mut self, other: FunctionLibrary) -> Result<String, RegisterError> {
 		let mut count = 0;
 		for (name, anons) in other.functions.into_iter() {
 			for func in anons {
 				count += 1;
-				self.register_function(&name, func.args, func.runnable)?;
+				self.add(&name, func.args, func.runnable, func.script)?;
 			}
 		}
 		Ok(format!("Registered {} functions", count))
@@ -119,5 +146,17 @@ impl FunctionLibrary {
 
 	pub fn get_list(&self, name: &str) -> Option<&Vec<AnonymousFunction>> {
 		self.functions.get(name)
+	}
+
+	pub fn get_scripts(&self) -> String {
+		itertools::Itertools::intersperse(
+			self.functions
+				.iter()
+				.map(|f| f.1)
+				.flatten()
+				.filter_map(|f| f.script.as_ref().map(String::as_str)),
+			"\n",
+		)
+		.collect()
 	}
 }

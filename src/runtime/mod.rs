@@ -1,7 +1,7 @@
 pub mod functions;
+mod lazy;
 pub mod output;
 pub mod scope;
-mod lazy;
 
 use std::borrow::Cow;
 use std::{collections::HashMap, fmt::Display};
@@ -14,8 +14,8 @@ use scope::ScopeStack;
 use scope::*;
 
 pub struct Runtime {
-	functions: FunctionLibrary,
-	global_scope: Scope,
+	pub library: FunctionLibrary,
+	pub globals: Scope,
 }
 
 #[derive(Debug)]
@@ -112,7 +112,9 @@ fn execute_string(stack: &mut ScopeStack, name: &FormatString) -> Next {
 	let mut output = Output::new_truthy();
 	for piece in name.into_iter() {
 		match piece {
-			FormatStringPiece::Raw(value) => output.append(Output::new(Cow::Owned(value.into()), 0)),
+			FormatStringPiece::Raw(value) => {
+				output.append(Output::new(Cow::Owned(value.into()), 0))
+			}
 			FormatStringPiece::Variable(var) => match stack.get_var(var) {
 				Some(value) => output.append(value.clone()),
 				None => return Next::Abort(ExecutionError::UndeclaredVariable(var.into())),
@@ -202,10 +204,7 @@ fn execute_command_statement(
 						.collect::<Vec<&str>>()
 						.join(" ");
 					let last_code = outputs.last().map(|o| o.code()).unwrap_or(0);
-					func_stack.set_var(
-						&arg.name,
-						Output::new(joined_values.into(), last_code),
-					);
+					func_stack.set_var(&arg.name, Output::new(joined_values.into(), last_code));
 					break;
 				} else {
 					func_stack.set_var(&arg.name, outputs.remove(0))
@@ -360,32 +359,13 @@ fn execute_statements(
 impl Runtime {
 	pub fn new() -> Runtime {
 		Runtime {
-			functions: FunctionLibrary::new(),
-			global_scope: HashMap::new(),
+			library: FunctionLibrary::new(),
+			globals: HashMap::new(),
 		}
-	}
-	pub fn register_library(&mut self, other: FunctionLibrary) -> Result<String, RegisterError> {
-		self.functions.register_library(other)
-	}
-	pub fn register_script_library(&mut self, functions: Vec<Function>) -> Vec<String> {
-		let mut registered: Vec<String> = vec![];
-		for func in functions {
-			let res = self.functions.register_function(
-				&func.name,
-				func.args,
-				Runnable::Block(func.block),
-			);
-			if let Err(err) = res {
-				eprintln!("{}", err);
-			} else {
-				registered.push(func.def);
-			}
-		}
-		registered
 	}
 	pub fn execute(&mut self, execs: &[Execution]) -> Result<Output, ExecutionError> {
-		let mut glob = ScopeStack::new(&mut self.global_scope);
-		let res = execute_statements(&self.functions, &mut glob, &execs);
+		let mut glob = ScopeStack::new(&mut self.globals);
+		let res = execute_statements(&self.library, &mut glob, &execs);
 		match res {
 			Next::Append(output) => Ok(output),
 			Next::Return(output) => Ok(output),

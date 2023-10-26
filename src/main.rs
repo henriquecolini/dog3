@@ -35,12 +35,30 @@ impl Display for Error {
 	}
 }
 
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Self::IO(value)
+    }
+}
+
+impl From<pest::error::Error<Rule>> for Error {
+    fn from(value: pest::error::Error<Rule>) -> Self {
+        Self::Syntax(value)
+    }
+}
+
+impl From<RegisterError> for Error {
+    fn from(value: RegisterError) -> Self {
+        Self::Library(value)
+    }
+}
+
 fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
-	runtime.register_library(builtin::std::build())?;
-	runtime.register_library(builtin::iter::build())?;
-	runtime.register_library(builtin::math::build())?;
-	runtime.register_library(builtin::logic::build())?;
-	runtime.register_library(builtin::net::build())
+	runtime.library.merge(builtin::std::build())?;
+	runtime.library.merge(builtin::iter::build())?;
+	runtime.library.merge(builtin::math::build())?;
+	runtime.library.merge(builtin::logic::build())?;
+	runtime.library.merge(builtin::net::build())
 }
 
 fn run() -> Result<(), Error> {
@@ -55,14 +73,9 @@ fn run() -> Result<(), Error> {
 		}
 	}
 	let mut runtime = Runtime::new();
-	if let Err(err) = register_libraries(&mut runtime) {
-		return Err(Error::Library(err));
-	}
-	let program = match parse(&inputs.join("\n")) {
-		Ok(program) => program,
-		Err(err) => return Err(Error::Syntax(err)),
-	};
-	runtime.register_script_library(program.functions);
+	register_libraries(&mut runtime)?;
+	let program = parse(&inputs.join("\n"))?;
+	runtime.library.add_scripts(program.functions)?;
 	match runtime.execute(&program.executions) {
 		Ok(output) => print!("{}", output.value()),
 		Err(err) => eprintln!("{}", err),

@@ -11,7 +11,7 @@ pub struct Function {
 	pub(crate) name: String,
 	pub(crate) args: Vec<FormalParameter>,
 	pub(crate) block: Block,
-	pub(crate) def: String
+	pub(crate) script: String,
 }
 
 #[derive(Debug)]

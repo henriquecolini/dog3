@@ -18,8 +18,7 @@ macro_rules! builtin_alias {
 					parameters.push(formal_param);
 				)*
 			$library
-			.register_function($alias, parameters, $crate::runtime::functions::Runnable::BuiltIn($func))
-			.unwrap();
+			.add_builtin($alias, parameters, $func);
 		}
 	};
 }

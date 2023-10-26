@@ -325,7 +325,7 @@ impl AST for Function {
 			name,
 			args,
 			block,
-			def,
+			script: def,
 		}
 	}
 }
