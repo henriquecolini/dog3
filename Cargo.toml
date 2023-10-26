@@ -6,6 +6,7 @@ authors = ["Henrique Colini <henriquecolini@gmail.com>"]
 
 [dependencies]
 clap = { version = "4.3.3", features = ["derive"] }
+minreq = { version = "2.11.0", features = ["https"] }
 pest = "2.0"
 pest_derive = "2.0"
 
