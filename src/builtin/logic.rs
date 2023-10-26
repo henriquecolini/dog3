@@ -1,6 +1,6 @@
 use crate::{
 	builtin, builtin_alias,
-	runtime::{functions::FunctionLibrary, output::Output, runtime::ExecutionError},
+	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
 };
 
 fn truthy(_: &[Output]) -> Result<Output, ExecutionError> {
@@ -97,9 +97,10 @@ fn leq(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn like(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
-		[a, b] => Ok({
-			Output::new("".to_owned(), if a.value == b.value { 0 } else { 1 })
-		}),
+		[a, b] => Ok(Output::new(
+			"".to_owned(),
+			if a.value == b.value { 0 } else { 1 },
+		)),
 		_ => Err(ExecutionError::InternalError),
 	}
 }
@@ -107,7 +108,10 @@ fn like(args: &[Output]) -> Result<Output, ExecutionError> {
 fn and(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			Output::new("".to_owned(), if a.is_truthy() && b.is_truthy() { 0 } else { 1 })
+			Output::new(
+				"".to_owned(),
+				if a.is_truthy() && b.is_truthy() { 0 } else { 1 },
+			)
 		}),
 		_ => Err(ExecutionError::InternalError),
 	}
@@ -116,7 +120,10 @@ fn and(args: &[Output]) -> Result<Output, ExecutionError> {
 fn or(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			Output::new("".to_owned(), if a.is_truthy() || b.is_truthy() { 0 } else { 1 })
+			Output::new(
+				"".to_owned(),
+				if a.is_truthy() || b.is_truthy() { 0 } else { 1 },
+			)
 		}),
 		_ => Err(ExecutionError::InternalError),
 	}
@@ -124,9 +131,10 @@ fn or(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn not(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
-		[a] => Ok({
-			Output::new("".to_owned(), if a.is_truthy() { 0 } else { 1 })
-		}),
+		[a] => Ok(Output::new(
+			"".to_owned(),
+			if a.is_truthy() { 0 } else { 1 },
+		)),
 		_ => Err(ExecutionError::InternalError),
 	}
 }

@@ -1,6 +1,6 @@
 use crate::{
 	builtin,
-	runtime::{functions::FunctionLibrary, output::Output, runtime::ExecutionError},
+	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
 };
 
 fn range(args: &[Output]) -> Result<Output, ExecutionError> {
@@ -69,12 +69,16 @@ fn append(args: &[Output]) -> Result<Output, ExecutionError> {
 		[left, right, separator] => (left, right, Some(separator)),
 		_ => return Err(ExecutionError::InternalError),
 	};
-	let combo = left.split_iter(separator).chain(right.split_iter(separator));
+	let combo = left
+		.split_iter(separator)
+		.chain(right.split_iter(separator));
 	let separator = match separator {
 		Some(s) => s.value.as_str(),
 		None => " ",
 	};
-	Ok(Output::new_truthy_with(combo.collect::<Vec<&str>>().join(separator)))
+	Ok(Output::new_truthy_with(
+		combo.collect::<Vec<&str>>().join(separator),
+	))
 }
 
 fn len(args: &[Output]) -> Result<Output, ExecutionError> {

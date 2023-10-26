@@ -1,10 +1,6 @@
 use crate::{
 	builtin,
-	runtime::{
-		functions::{FunctionLibrary},
-		output::{Output},
-		runtime::{ExecutionError},
-	},
+	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
 };
 
 fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
@@ -22,7 +18,7 @@ fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
 					Err(_) => return None,
 				}
 			}
-			Some((first,options))
+			Some((first, options))
 		}
 		_ => None,
 	}
@@ -56,7 +52,7 @@ fn sub(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn mul(args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
-		Some((first,numbers)) => {
+		Some((first, numbers)) => {
 			let mut val = first;
 			for x in numbers {
 				val *= x;
@@ -69,7 +65,7 @@ fn mul(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn div(args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
-		Some((first,numbers)) => {
+		Some((first, numbers)) => {
 			let mut val = first;
 			for x in numbers {
 				val /= x;
@@ -82,7 +78,7 @@ fn div(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn max(args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
-		Some((first,numbers)) => {
+		Some((first, numbers)) => {
 			let mut val = first;
 			for x in numbers {
 				if x > val {
@@ -97,7 +93,7 @@ fn max(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn min(args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
-		Some((first,numbers)) => {
+		Some((first, numbers)) => {
 			let mut val = first;
 			for x in numbers {
 				if x < val {
@@ -116,9 +112,7 @@ fn floor(args: &[Output]) -> Result<Output, ExecutionError> {
 		_ => return Err(ExecutionError::InternalError),
 	};
 	Ok(match number {
-		Ok(number) => {
-			Output::new_truthy_with(number.floor().to_string())
-		}
+		Ok(number) => Output::new_truthy_with(number.floor().to_string()),
 		Err(_) => Output::new_falsy(),
 	})
 }
@@ -129,9 +123,7 @@ fn ceil(args: &[Output]) -> Result<Output, ExecutionError> {
 		_ => return Err(ExecutionError::InternalError),
 	};
 	Ok(match number {
-		Ok(number) => {
-			Output::new_truthy_with(number.ceil().to_string())
-		}
+		Ok(number) => Output::new_truthy_with(number.ceil().to_string()),
 		Err(_) => Output::new_falsy(),
 	})
 }

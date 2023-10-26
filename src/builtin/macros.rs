@@ -11,9 +11,9 @@ macro_rules! builtin_alias {
 					let vector = $param.starts_with('%');
 					let name = $param.trim_start_matches('%').to_string();
 					let formal_param = if vector {
-						$crate::parser::parser::FormalParameter::new_vector(&name)
+						$crate::parser::grammar::FormalParameter::new_vector(&name)
 					} else {
-						$crate::parser::parser::FormalParameter::new(&name)
+						$crate::parser::grammar::FormalParameter::new(&name)
 					};
 					parameters.push(formal_param);
 				)*

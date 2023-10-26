@@ -2,9 +2,9 @@ use std::{fmt::Display, fs, path::PathBuf, process::ExitCode};
 
 use clap::Parser;
 use dog3::{
-	dogs,
+	builtin,
 	parser::parser::{parse, Rule},
-	runtime::{functions::RegisterError, runtime::Runtime},
+	runtime::{functions::RegisterError, Runtime},
 };
 
 #[derive(Parser, Debug)]
@@ -36,11 +36,13 @@ impl Display for Error {
 }
 
 fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
-	runtime.functions.register_library(dogs::std::build())?;
-	runtime.functions.register_library(dogs::status::build())?;
-	runtime.functions.register_library(dogs::iter::build())?;
-	runtime.functions.register_library(dogs::math::build())?;
-	runtime.functions.register_library(dogs::logic::build())
+	runtime.functions.register_library(builtin::std::build())?;
+	runtime
+		.functions
+		.register_library(builtin::status::build())?;
+	runtime.functions.register_library(builtin::iter::build())?;
+	runtime.functions.register_library(builtin::math::build())?;
+	runtime.functions.register_library(builtin::logic::build())
 }
 
 fn run() -> Result<(), Error> {
@@ -64,7 +66,7 @@ fn run() -> Result<(), Error> {
 	};
 	match runtime.execute(program) {
 		Ok(output) => print!("{}", output.value),
-		Err(err) => eprintln!("{}", err)
+		Err(err) => eprintln!("{}", err),
 	}
 	Ok(())
 }
@@ -75,6 +77,6 @@ fn main() -> ExitCode {
 		Err(err) => {
 			println!("{}", err);
 			ExitCode::FAILURE
-		},
+		}
 	}
 }

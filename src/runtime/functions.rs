@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::parser::{Block, FormalParameter};
+use crate::parser::grammar::{Block, FormalParameter};
 
-use super::{output::Output, runtime::ExecutionError};
+use super::{output::Output, ExecutionError};
 
 type BuiltIn = fn(&[Output]) -> Result<Output, ExecutionError>;
 

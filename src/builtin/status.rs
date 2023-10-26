@@ -1,12 +1,11 @@
 use crate::{
-	runtime::{functions::FunctionLibrary, output::Output, runtime::ExecutionError}, builtin,
+	builtin,
+	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
 };
 
 fn status(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
-		[value] => {
-			Ok(Output::new(value.code.to_string(), value.code))
-		}
+		[value] => Ok(Output::new(value.code.to_string(), value.code)),
 		[value, status] => {
 			let status = status.value.parse();
 			Ok(Output::new(

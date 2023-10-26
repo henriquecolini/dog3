@@ -75,12 +75,12 @@ fn remove_ends<'a>(raw: &'a str) -> &'a str {
 }
 
 impl Region {
-    fn range(&self) -> &Range {
-        match self {
-            Region::Raw(r) => r,
-            Region::Variable(r) => r,
-        }
-    }
+	fn range(&self) -> &Range {
+		match self {
+			Region::Raw(r) => r,
+			Region::Variable(r) => r,
+		}
+	}
 }
 
 impl FormatString {

@@ -1,8 +1,15 @@
+pub mod functions;
+pub mod output;
+pub mod scope;
+
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::{format_string::*, parser::*};
+use crate::parser::{format_string::*, grammar::*};
 
-use super::{functions::*, output::*, scope::ScopeStack, scope::*};
+use functions::*;
+use output::*;
+use scope::ScopeStack;
+use scope::*;
 
 pub struct Runtime {
 	pub functions: FunctionLibrary,
@@ -69,7 +76,11 @@ impl Display for ExecutionError {
 				write!(f, "error: Use of undefined function `{}`", func)
 			}
 			ExecutionError::UndefinedOverload(func, arg_c) => {
-				write!(f, "error: no overload for function `{}` takes `{}` arguments", func, arg_c)
+				write!(
+					f,
+					"error: no overload for function `{}` takes `{}` arguments",
+					func, arg_c
+				)
 			}
 			ExecutionError::InternalError => write!(f, "error: Internal runtime error"),
 		}
@@ -166,7 +177,12 @@ fn execute_command_statement(
 		.find(|x| x.max_args >= count && x.min_args <= count);
 	let func = match func {
 		Some(func) => func,
-		None => return Next::Abort(ExecutionError::UndefinedOverload(stmt.name.to_owned(), count)),
+		None => {
+			return Next::Abort(ExecutionError::UndefinedOverload(
+				stmt.name.to_owned(),
+				count,
+			))
+		}
 	};
 	let mut outputs = vec![];
 	for arg in &stmt.parameters {
@@ -176,7 +192,7 @@ fn execute_command_statement(
 	match &func.runnable {
 		Runnable::Block(block) => {
 			let mut func_stack = ScopeStack::new_sibling(stack);
-			for (i, arg) in func.args.iter().enumerate() {
+			for arg in func.args.iter() {
 				if arg.vector {
 					let joined_values = outputs
 						.iter()
