@@ -36,11 +36,11 @@ impl Display for Error {
 }
 
 fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
-	runtime.functions.register_library(builtin::std::build())?;
-	runtime.functions.register_library(builtin::iter::build())?;
-	runtime.functions.register_library(builtin::math::build())?;
-	runtime.functions.register_library(builtin::logic::build())?;
-	runtime.functions.register_library(builtin::net::build())
+	runtime.register_library(builtin::std::build())?;
+	runtime.register_library(builtin::iter::build())?;
+	runtime.register_library(builtin::math::build())?;
+	runtime.register_library(builtin::logic::build())?;
+	runtime.register_library(builtin::net::build())
 }
 
 fn run() -> Result<(), Error> {
@@ -62,7 +62,8 @@ fn run() -> Result<(), Error> {
 		Ok(program) => program,
 		Err(err) => return Err(Error::Syntax(err)),
 	};
-	match runtime.execute(program) {
+	runtime.register_script_library(program.functions);
+	match runtime.execute(&program.executions) {
 		Ok(output) => print!("{}", output.value),
 		Err(err) => eprintln!("{}", err),
 	}

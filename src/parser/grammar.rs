@@ -2,8 +2,8 @@ use super::format_string::FormatString;
 
 #[derive(Debug)]
 pub struct Program {
-	pub(crate) functions: Vec<Function>,
-	pub(crate) executions: Vec<Execution>,
+	pub functions: Vec<Function>,
+	pub executions: Vec<Execution>,
 }
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub struct Function {
 	pub(crate) name: String,
 	pub(crate) args: Vec<FormalParameter>,
 	pub(crate) block: Block,
+	pub(crate) def: String
 }
 
 #[derive(Debug)]
@@ -106,12 +107,6 @@ pub struct CommandStatement {
 #[derive(Debug)]
 pub struct ActualParameter {
 	pub(crate) value: Value,
-}
-
-impl Program {
-	pub fn functions(&mut self) -> &mut Vec<Function> {
-		&mut self.functions
-	}
 }
 
 impl FormalParameter {

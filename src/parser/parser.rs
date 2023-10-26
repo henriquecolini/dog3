@@ -294,6 +294,7 @@ impl AST for Function {
 		let mut name = String::new();
 		let mut args: Vec<FormalParameter> = vec![];
 		let mut block: Block = Block { executions: vec![] };
+		let def = entry.as_str().to_owned();
 		for pair in entry.into_inner() {
 			match pair.as_rule() {
 				Rule::Identifier => name = AST::build(pair),
@@ -316,7 +317,7 @@ impl AST for Function {
 				_ => unreachable!(),
 			}
 		}
-		Function { name, args, block }
+		Function { name, args, block, def }
 	}
 }
 

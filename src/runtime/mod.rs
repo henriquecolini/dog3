@@ -12,8 +12,8 @@ use scope::ScopeStack;
 use scope::*;
 
 pub struct Runtime {
-	pub functions: FunctionLibrary,
-	pub global_scope: Scope,
+	functions: FunctionLibrary,
+	global_scope: Scope,
 }
 
 #[derive(Debug)]
@@ -365,8 +365,12 @@ impl Runtime {
 			global_scope: HashMap::new(),
 		}
 	}
-	pub fn execute(&mut self, program: Program) -> Result<Output, ExecutionError> {
-		for func in program.functions {
+	pub fn register_library(&mut self, other: FunctionLibrary) -> Result<String, RegisterError> {
+		self.functions.register_library(other)
+	}
+	pub fn register_script_library(&mut self, functions: Vec<Function>) -> Vec<String> {
+		let mut registered: Vec<String> = vec![];
+		for func in functions {
 			let res = self.functions.register_function(
 				&func.name,
 				func.args,
@@ -374,10 +378,15 @@ impl Runtime {
 			);
 			if let Err(err) = res {
 				eprintln!("{}", err);
+			} else {
+				registered.push(func.def);
 			}
 		}
+		registered
+	}
+	pub fn execute(&mut self, execs: &[Execution]) -> Result<Output, ExecutionError> {
 		let mut glob = ScopeStack::new(&mut self.global_scope);
-		let res = execute_statements(&self.functions, &mut glob, &program.executions);
+		let res = execute_statements(&self.functions, &mut glob, &execs);
 		match res {
 			Next::Append(output) => Ok(output),
 			Next::Return(output) => Ok(output),

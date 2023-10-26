@@ -24,12 +24,16 @@ pub struct FunctionLibrary {
 
 #[derive(Debug)]
 pub enum RegisterError {
-	AlreadyExists,
+	OverloadBuiltin(String),
 }
 
 impl Display for RegisterError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "A function with equivalent signature already exists")
+		match self {
+			RegisterError::OverloadBuiltin(s) => {
+				write!(f, "Can not overload built-in function `{}`", s)
+			}
+		}
 	}
 }
 
@@ -56,6 +60,12 @@ impl AnonymousFunction {
 	fn collides(&self, other: &AnonymousFunction) -> bool {
 		self.min_args <= other.max_args && self.max_args >= other.min_args
 	}
+	fn is_builtin(&self) -> bool {
+		match self.runnable {
+			Runnable::Block(_) => false,
+			Runnable::BuiltIn(_) => true,
+		}
+	}
 }
 
 impl FunctionLibrary {
@@ -75,6 +85,9 @@ impl FunctionLibrary {
 
 		match current {
 			Some(funcs) => {
+				if !anon.is_builtin() && funcs.iter().any(|f| f.is_builtin()) {
+					return Err(RegisterError::OverloadBuiltin(name.to_owned()));
+				}
 				funcs.retain(|a| !a.collides(&anon));
 				let (min, max) = (anon.min_args, anon.max_args);
 				funcs.push(anon);
