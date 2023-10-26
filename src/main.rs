@@ -3,7 +3,7 @@ use std::{fmt::Display, fs, path::PathBuf, process::ExitCode};
 use clap::Parser;
 use dog3::{
 	builtin,
-	parser::parser::{parse, Rule},
+	parser::{parse, Rule},
 	runtime::{functions::RegisterError, Runtime},
 };
 
@@ -64,7 +64,7 @@ fn run() -> Result<(), Error> {
 	};
 	runtime.register_script_library(program.functions);
 	match runtime.execute(&program.executions) {
-		Ok(output) => print!("{}", output.value),
+		Ok(output) => print!("{}", output.value()),
 		Err(err) => eprintln!("{}", err),
 	}
 	Ok(())
