@@ -1,7 +1,9 @@
 pub mod functions;
 pub mod output;
 pub mod scope;
+mod lazy;
 
+use std::borrow::Cow;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::parser::{format_string::*, grammar::*};
@@ -110,10 +112,10 @@ fn execute_string(stack: &mut ScopeStack, name: &FormatString) -> Next {
 	let mut output = Output::new_truthy();
 	for piece in name.into_iter() {
 		match piece {
-			FormatStringPiece::Raw(value) => output.append(Output::new(value.to_owned(), 0)),
+			FormatStringPiece::Raw(value) => output.append(Output::new(Cow::Owned(value.into()), 0)),
 			FormatStringPiece::Variable(var) => match stack.get_var(var) {
 				Some(value) => output.append(value.clone()),
-				None => return Next::Abort(ExecutionError::UndeclaredVariable(var.to_owned())),
+				None => return Next::Abort(ExecutionError::UndeclaredVariable(var.into())),
 			},
 		}
 	}
@@ -196,16 +198,13 @@ fn execute_command_statement(
 				if arg.vector {
 					let joined_values = outputs
 						.iter()
-						.map(|output| output.value.clone())
-						.collect::<Vec<String>>()
+						.map(|output| output.value())
+						.collect::<Vec<&str>>()
 						.join(" ");
-					let last_code = outputs.last().map(|o| o.code).unwrap_or(0);
+					let last_code = outputs.last().map(|o| o.code()).unwrap_or(0);
 					func_stack.set_var(
 						&arg.name,
-						Output {
-							value: joined_values,
-							code: last_code,
-						},
+						Output::new(joined_values.into(), last_code),
 					);
 					break;
 				} else {
@@ -266,7 +265,7 @@ fn execute_for_statement(
 			Some(split) => Some(evaluate!(execute_value(functions, stack, split))),
 		};
 		for value in list.split_iter(split.as_ref()) {
-			stack.set_var(&stmt.variable, Output::new(value.to_owned(), 0));
+			stack.set_var(&stmt.variable, Output::new(value.to_owned().into(), 0));
 			proceed!(scoped!(stack, {
 				output.append(evaluate!(execute_value(functions, stack, &stmt.output)));
 				Next::Proceed

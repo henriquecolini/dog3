@@ -8,13 +8,13 @@ use crate::{
 fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
 	match args {
 		[first, rest @ ..] => {
-			let first = match first.value.parse() {
+			let first = match first.try_into() {
 				Ok(x) => x,
 				Err(_) => return None,
 			};
 			let mut options = vec![];
 			for arg in rest {
-				let parsed = arg.value.parse();
+				let parsed = arg.try_into();
 				match parsed {
 					Ok(number) => options.push(number),
 					Err(_) => return None,
@@ -33,7 +33,7 @@ fn add(args: &[Output]) -> Result<Output, ExecutionError> {
 			for x in numbers {
 				val += x;
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
@@ -46,7 +46,7 @@ fn sub(args: &[Output]) -> Result<Output, ExecutionError> {
 			for x in numbers {
 				val -= x;
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
@@ -59,7 +59,7 @@ fn mul(args: &[Output]) -> Result<Output, ExecutionError> {
 			for x in numbers {
 				val *= x;
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
@@ -72,7 +72,7 @@ fn div(args: &[Output]) -> Result<Output, ExecutionError> {
 			for x in numbers {
 				val /= x;
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
@@ -87,7 +87,7 @@ fn max(args: &[Output]) -> Result<Output, ExecutionError> {
 					val = x
 				}
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
@@ -102,38 +102,38 @@ fn min(args: &[Output]) -> Result<Output, ExecutionError> {
 					val = x
 				}
 			}
-			Output::new_truthy_with(val.to_string())
+			Output::new_truthy_with(val.to_string().into())
 		}
 		None => Output::new_falsy(),
 	})
 }
 
 fn floor(args: &[Output]) -> Result<Output, ExecutionError> {
-	let number = match args {
-		[number] => number.value.parse::<f64>(),
+	let number: Result<f64, _> = match args {
+		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
 	};
 	Ok(match number {
-		Ok(number) => Output::new_truthy_with(number.floor().to_string()),
+		Ok(number) => Output::new_truthy_with(number.floor().to_string().into()),
 		Err(_) => Output::new_falsy(),
 	})
 }
 
 fn ceil(args: &[Output]) -> Result<Output, ExecutionError> {
-	let number = match args {
-		[number] => number.value.parse::<f64>(),
+	let number: Result<f64, _> = match args {
+		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
 	};
 	Ok(match number {
-		Ok(number) => Output::new_truthy_with(number.ceil().to_string()),
+		Ok(number) => Output::new_truthy_with(number.ceil().to_string().into()),
 		Err(_) => Output::new_falsy(),
 	})
 }
 
 fn random(args: &[Output]) -> Result<Output, ExecutionError> {
 	let (min, max) = match args {
-		[max] => (Ok(0), max.value.parse::<isize>()),
-		[min, max] => (min.value.parse::<isize>(), max.value.parse::<isize>()),
+		[max] => (Ok(0), max.try_into()),
+		[min, max] => (min.try_into(), max.try_into()),
 		_ => return Err(ExecutionError::InternalError),
 	};
 	Ok(match (min, max) {
@@ -143,7 +143,8 @@ fn random(args: &[Output]) -> Result<Output, ExecutionError> {
 			} else {
 				rand::thread_rng().gen_range(min..max)
 			}
-			.to_string(),
+			.to_string()
+			.into(),
 		),
 		_ => Output::new_falsy(),
 	})

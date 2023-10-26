@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{
 	builtin,
 	runtime::{
@@ -27,11 +29,11 @@ fn println(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn status(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
-		[value] => Ok(Output::new(value.code.to_string(), value.code)),
+		[value] => Ok(Output::new(value.code().to_string().into(), value.code())),
 		[value, status] => {
-			let status = status.value.parse();
+			let status: Result<i64, _> = status.try_into();
 			Ok(Output::new(
-				value.value.to_owned(),
+				Cow::Owned(value.value().into()),
 				match status {
 					Ok(x) => x,
 					Err(_) => 1,

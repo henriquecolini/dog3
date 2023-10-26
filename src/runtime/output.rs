@@ -1,9 +1,15 @@
-use serde::{Serialize, Deserialize};
+use std::{borrow::Cow, cell::Cell};
+
+use serde::{Deserialize, Serialize};
+
+use super::lazy::LazyParse;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Output {
-	pub value: String,
-	pub code: i32,
+	value: Cow<'static, str>,
+	code: i64,
+	as_f64: LazyParse<f64>,
+	as_i64: LazyParse<i64>,
 }
 
 pub enum OutputSplitIterator<'a> {
@@ -23,41 +29,39 @@ impl<'a> CharIterator<'a> {
 	}
 }
 
-pub fn join_outputs(outputs: &[Output]) -> String {
+pub fn join_outputs<'a>(outputs: &[Output]) -> Cow<'a, str> {
 	outputs
 		.iter()
 		.map(|output| output.value.clone())
-		.collect::<Vec<String>>()
+		.collect::<Vec<Cow<'a, str>>>()
 		.join(" ")
+		.into()
 }
 
 impl Output {
-	pub fn new(value: String, code: i32) -> Output {
-		Output { value, code }
+	pub fn new(value: Cow<'static, str>, code: i64) -> Output {
+		Output { value, code, as_f64: LazyParse::new(), as_i64: LazyParse::new() }
 	}
 	pub fn new_truthy() -> Output {
-		Output {
-			value: "".to_owned(),
-			code: 0,
-		}
+		Self::new("".into(), 0)
 	}
 	pub fn new_falsy() -> Output {
-		Output {
-			value: "".to_owned(),
-			code: 1,
-		}
+		Self::new("".into(), 1)
 	}
-	pub fn new_truthy_with(value: String) -> Output {
-		Output { value, code: 0 }
+	pub fn new_truthy_with(value: Cow<'static, str>) -> Output {
+		Self::new(value, 0)
 	}
-	pub fn new_falsy_with(value: String) -> Output {
-		Output { value, code: 1 }
+	pub fn new_falsy_with(value: Cow<'static, str>) -> Output {
+		Self::new(value, 1)
 	}
 	pub fn append(&mut self, other: Output) {
-		self.value += &other.value;
+		let cloned = self.value.to_mut();
+		cloned.push_str(&other.value);
 		self.code = other.code;
+		self.as_f64.discard();
+		self.as_i64.discard();
 	}
-	pub fn split_iter<'a>(&'a self, arg: Option<&'a Output>) -> OutputSplitIterator<'a> {
+	pub fn split_iter<'b>(&'b self, arg: Option<&'b Output>) -> OutputSplitIterator<'b> {
 		match arg {
 			Some(arg) => {
 				if arg.value == "" {
@@ -71,6 +75,26 @@ impl Output {
 	}
 	pub fn is_truthy(&self) -> bool {
 		self.code == 0
+	}
+	pub fn value<'a>(&'a self) -> &'a str {
+		&self.value
+	}
+	pub fn code(&self) -> i64 {
+		self.code
+	}
+}
+
+impl TryFrom<&Output> for f64 {
+	type Error = ();
+	fn try_from(value: &Output) -> Result<Self, Self::Error> {
+		value.as_f64.try_parse(&value.value).ok_or(())
+	}
+}
+
+impl TryFrom<&Output> for i64 {
+	type Error = ();
+	fn try_from(value: &Output) -> Result<Self, Self::Error> {
+		value.as_i64.try_parse(&value.value).ok_or(())
 	}
 }
 

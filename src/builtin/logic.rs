@@ -14,10 +14,10 @@ fn falsy(_: &[Output]) -> Result<Output, ExecutionError> {
 fn eq(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a == b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a == b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -28,10 +28,10 @@ fn eq(args: &[Output]) -> Result<Output, ExecutionError> {
 fn neq(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a != b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a != b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -42,10 +42,10 @@ fn neq(args: &[Output]) -> Result<Output, ExecutionError> {
 fn gt(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a > b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a > b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -56,10 +56,10 @@ fn gt(args: &[Output]) -> Result<Output, ExecutionError> {
 fn lt(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a < b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a < b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -70,10 +70,10 @@ fn lt(args: &[Output]) -> Result<Output, ExecutionError> {
 fn geq(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a >= b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a >= b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -84,10 +84,10 @@ fn geq(args: &[Output]) -> Result<Output, ExecutionError> {
 fn leq(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
-			let a = a.value.parse::<f64>();
-			let b = b.value.parse::<f64>();
+			let a: Result<f64, _> = a.try_into();
+			let b: Result<f64, _> = b.try_into();
 			match (a, b) {
-				(Ok(a), Ok(b)) => Output::new("".to_owned(), if a <= b { 0 } else { 1 }),
+				(Ok(a), Ok(b)) => Output::new("".into(), if a <= b { 0 } else { 1 }),
 				_ => Output::new_falsy(),
 			}
 		}),
@@ -98,8 +98,8 @@ fn leq(args: &[Output]) -> Result<Output, ExecutionError> {
 fn like(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok(Output::new(
-			"".to_owned(),
-			if a.value == b.value { 0 } else { 1 },
+			"".into(),
+			if a.value() == b.value() { 0 } else { 1 },
 		)),
 		_ => Err(ExecutionError::InternalError),
 	}
@@ -109,7 +109,7 @@ fn and(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			Output::new(
-				"".to_owned(),
+				"".into(),
 				if a.is_truthy() && b.is_truthy() { 0 } else { 1 },
 			)
 		}),
@@ -121,7 +121,7 @@ fn or(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			Output::new(
-				"".to_owned(),
+				"".into(),
 				if a.is_truthy() || b.is_truthy() { 0 } else { 1 },
 			)
 		}),
@@ -131,10 +131,7 @@ fn or(args: &[Output]) -> Result<Output, ExecutionError> {
 
 fn not(args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
-		[a] => Ok(Output::new(
-			"".to_owned(),
-			if a.is_truthy() { 0 } else { 1 },
-		)),
+		[a] => Ok(Output::new("".into(), if a.is_truthy() { 0 } else { 1 })),
 		_ => Err(ExecutionError::InternalError),
 	}
 }
