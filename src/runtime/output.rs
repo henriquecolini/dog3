@@ -1,4 +1,4 @@
-use std::{borrow::Cow, cell::Cell};
+use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
@@ -29,13 +29,18 @@ impl<'a> CharIterator<'a> {
 	}
 }
 
-pub fn join_outputs<'a>(outputs: &[Output]) -> Cow<'a, str> {
-	outputs
-		.iter()
-		.map(|output| output.value.clone())
-		.collect::<Vec<Cow<'a, str>>>()
-		.join(" ")
-		.into()
+pub fn join_outputs<'a, 'b, I: Iterator<Item = &'b Output>>(outputs: I) -> Output {
+	let mut result = Output::new_truthy();
+	let mut first = true;
+	for out in outputs {
+		if first {
+			first = false;
+		} else {
+			result.append_str(" ");
+		}
+		result.append(out);
+	}
+	result
 }
 
 impl Output {
@@ -54,10 +59,19 @@ impl Output {
 	pub fn new_falsy_with(value: Cow<'static, str>) -> Output {
 		Self::new(value, 1)
 	}
-	pub fn append(&mut self, other: Output) {
-		let cloned = self.value.to_mut();
-		cloned.push_str(&other.value);
+	pub fn append(&mut self, other: &Output) {
+		self.value.to_mut().push_str(&other.value);
 		self.code = other.code;
+		self.as_f64.discard();
+		self.as_i64.discard();
+	}
+	pub fn append_str(&mut self, other: &str) {
+		self.value.to_mut().push_str(&other);
+		self.as_f64.discard();
+		self.as_i64.discard();
+	}
+	pub fn replace(&mut self, other: Cow<'static, str>) {
+		self.value = other;
 		self.as_f64.discard();
 		self.as_i64.discard();
 	}

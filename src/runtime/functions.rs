@@ -1,7 +1,5 @@
 use std::{collections::HashMap, fmt::Display};
 
-use itertools::Itertools;
-
 use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};

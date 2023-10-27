@@ -3,7 +3,6 @@ mod lazy;
 pub mod output;
 pub mod scope;
 
-use std::borrow::Cow;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::parser::{format_string::*, grammar::*};
@@ -113,10 +112,10 @@ fn execute_string(stack: &mut ScopeStack, name: &FormatString) -> Next {
 	for piece in name.into_iter() {
 		match piece {
 			FormatStringPiece::Raw(value) => {
-				output.append(Output::new(Cow::Owned(value.into()), 0))
+				output.append_str(value)
 			}
 			FormatStringPiece::Variable(var) => match stack.get_var(var) {
-				Some(value) => output.append(value.clone()),
+				Some(value) => output.append(value),
 				None => return Next::Abort(ExecutionError::UndeclaredVariable(var.into())),
 			},
 		}
@@ -266,7 +265,7 @@ fn execute_for_statement(
 		for value in list.split_iter(split.as_ref()) {
 			stack.set_var(&stmt.variable, Output::new(value.to_owned().into(), 0));
 			proceed!(scoped!(stack, {
-				output.append(evaluate!(execute_value(functions, stack, &stmt.output)));
+				output.append(&evaluate!(execute_value(functions, stack, &stmt.output)));
 				Next::Proceed
 			}));
 		}
@@ -309,7 +308,7 @@ fn execute_while_statement(
 	let mut condition = evaluate!(execute_value(functions, stack, &stmt.condition));
 	while condition.is_truthy() {
 		proceed!(scoped!(stack, {
-			output.append(evaluate!(execute_value(functions, stack, &stmt.output)));
+			output.append(&evaluate!(execute_value(functions, stack, &stmt.output)));
 			Next::Proceed
 		}));
 		condition = evaluate!(execute_value(functions, stack, &stmt.condition));
@@ -348,7 +347,7 @@ fn execute_statements(
 		};
 		match next {
 			Next::Proceed => continue,
-			Next::Append(out) => output.append(out),
+			Next::Append(out) => output.append(&out),
 			Next::Clear(out) => output = out,
 			other => return other,
 		}

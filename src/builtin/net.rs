@@ -1,4 +1,4 @@
-use minreq::{Request, Response};
+use minreq::Request;
 
 use crate::{
 	builtin,

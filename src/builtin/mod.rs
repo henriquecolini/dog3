@@ -4,3 +4,4 @@ mod macros;
 pub mod math;
 pub mod net;
 pub mod std;
+pub mod str;
