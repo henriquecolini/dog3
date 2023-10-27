@@ -58,7 +58,8 @@ fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
 	runtime.library.merge(builtin::iter::build())?;
 	runtime.library.merge(builtin::math::build())?;
 	runtime.library.merge(builtin::logic::build())?;
-	runtime.library.merge(builtin::net::build())
+	runtime.library.merge(builtin::net::build())?;
+	runtime.library.merge(builtin::str::build())
 }
 
 fn run() -> Result<(), Error> {

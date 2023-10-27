@@ -56,10 +56,10 @@ fn status(args: &[Output]) -> Result<Output, ExecutionError> {
 
 pub fn build() -> FunctionLibrary {
 	let mut library = FunctionLibrary::new();
-	builtin!(library, put, "%in");
-	builtin!(library, pln, "%in");
-	builtin!(library, print, "%in");
-	builtin!(library, println, "%in");
+	builtin!(library, put, "%args");
+	builtin!(library, pln, "%args");
+	builtin!(library, print, "%args");
+	builtin!(library, println, "%args");
 	builtin!(library, status, "value");
 	builtin!(library, status, "value", "status");
 	library

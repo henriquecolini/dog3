@@ -237,12 +237,12 @@ Here are all the functions you can currently use. The list is small as the langu
 
 | Function | Description | Status |
 | -------- | ----------- | ------ |
-| put %in | Outputs `in` | status `in` |
-| pln %in | Outputs `in` followed by a newline | status `in` |
-| print %in | Writes `in` to standard output | truthy |
-| println %in | Writes `in` to standard output followed by a newline | truthy |
-| status in | Returns the status code of `in` | status `in` |
-| status in st | Outputs `in` | `st` |
+| put %args | Outputs `args` | status `args` |
+| pln %args | Outputs `args` followed by a newline | status `args` |
+| print %args | Writes `args` to standard output | truthy |
+| println %args | Writes `args` to standard output followed by a newline | truthy |
+| status arg | Returns the status code of `arg` | status `arg` |
+| status arg st | Outputs `arg` | `st` |
 
 ### Module `iter`
 
@@ -290,6 +290,14 @@ Here are all the functions you can currently use. The list is small as the langu
 | ceil x | Outputs decimal float ceil(`first`) | truthy if all arguments are numbers, falsy otherwise
 | random max | Outputs integer random number between 0 (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
 | random min max | Outputs integer random number between `min` (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
+
+### Module `str`
+
+| Function | Description | Status |
+| -------- | ----------- | ------ |
+| upper %args | Outputs `args` in uppercase | status `args`
+| lower %args | Outputs `args` in lowercase | status `args`
+| replace target from to | Outputs `target` with all occurrences of `from` replaced by `to` | status `target`
 
 ### Module `net`
 
