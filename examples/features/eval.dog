@@ -1,0 +1,1 @@
+eval "fn say_hello () { pln 'Hello, world!' } say_hello"

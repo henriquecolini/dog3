@@ -26,7 +26,7 @@ fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
 	}
 }
 
-fn add(args: &[Output]) -> Result<Output, ExecutionError> {
+fn add(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -39,7 +39,7 @@ fn add(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn sub(args: &[Output]) -> Result<Output, ExecutionError> {
+fn sub(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -52,7 +52,7 @@ fn sub(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn mul(args: &[Output]) -> Result<Output, ExecutionError> {
+fn mul(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -65,7 +65,7 @@ fn mul(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn div(args: &[Output]) -> Result<Output, ExecutionError> {
+fn div(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -78,7 +78,7 @@ fn div(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn max(args: &[Output]) -> Result<Output, ExecutionError> {
+fn max(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -93,7 +93,7 @@ fn max(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn min(args: &[Output]) -> Result<Output, ExecutionError> {
+fn min(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -108,7 +108,7 @@ fn min(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn floor(args: &[Output]) -> Result<Output, ExecutionError> {
+fn floor(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let number: Result<f64, _> = match args {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
@@ -119,7 +119,7 @@ fn floor(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn ceil(args: &[Output]) -> Result<Output, ExecutionError> {
+fn ceil(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let number: Result<f64, _> = match args {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
@@ -130,7 +130,7 @@ fn ceil(args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn random(args: &[Output]) -> Result<Output, ExecutionError> {
+fn random(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (min, max) = match args {
 		[max] => (Ok(0), max.try_into()),
 		[min, max] => (min.try_into(), max.try_into()),

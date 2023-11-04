@@ -1,0 +1,17 @@
+fn favorite_number () {
+    // this is my favorite_number!
+    put 42
+}
+
+fn favorite_number (times) {
+    mul { favorite_number } $times
+}
+
+pln This is the source code of pln:;
+src put;
+
+pln \nThis is the source code of eval:;
+src eval;
+
+pln \nThis is the source code of my favorite_number:;
+src favorite_number;

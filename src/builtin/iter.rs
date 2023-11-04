@@ -3,23 +3,29 @@ use crate::{
 	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
 };
 
-fn range(args: &[Output]) -> Result<Output, ExecutionError> {
-	let (number, separator): (Result<i64, _>, _) = match args {
-		[number] => (number.try_into(), " "),
-		[number, separator] => (number.try_into(), separator.value()),
+fn range(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+	#[rustfmt::skip]
+	let (min, max, step, separator): (Result<i64, _>, Result<i64, _>, Result<i64, _>, _) = match args {
+		[max]                       => (Ok(0),          max.try_into(), Ok(1),           " "),
+		[min, max]                  => (min.try_into(), max.try_into(), Ok(1),           " "),
+		[min, max, step]            => (min.try_into(), max.try_into(), step.try_into(), " "),
+		[min, max, step, separator] => (min.try_into(), max.try_into(), step.try_into(), separator.value()),
 		_ => return Err(ExecutionError::InternalError),
 	};
-	Ok(match number {
-		Ok(number) => {
-			let range = 1..=number;
+	Ok(match (min, max, step) {
+		(Ok(min), Ok(max), Ok(step)) => {
+			if step < 0 {
+				return Ok(Output::new_falsy());
+			}
+			let range = (min..max).step_by(step as usize);
 			let range: Vec<String> = range.map(|x| x.to_string()).collect();
 			Output::new_truthy_with(range.join(separator).into())
 		}
-		Err(_) => Output::new_falsy(),
+		_ => Output::new_falsy(),
 	})
 }
 
-fn first(args: &[Output]) -> Result<Output, ExecutionError> {
+fn first(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, n, separator) = match &args {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
@@ -41,7 +47,7 @@ fn first(args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(Output::new_truthy_with(arr[..n].join(separator).into()))
 }
 
-fn last(args: &[Output]) -> Result<Output, ExecutionError> {
+fn last(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, n, separator) = match &args {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
@@ -65,7 +71,7 @@ fn last(args: &[Output]) -> Result<Output, ExecutionError> {
 	))
 }
 
-fn append(args: &[Output]) -> Result<Output, ExecutionError> {
+fn append(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (left, right, separator) = match &args {
 		[left, right] => (left, right, None),
 		[left, right, separator] => (left, right, Some(separator)),
@@ -83,7 +89,7 @@ fn append(args: &[Output]) -> Result<Output, ExecutionError> {
 	))
 }
 
-fn len(args: &[Output]) -> Result<Output, ExecutionError> {
+fn len(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, separator) = match &args {
 		[arr] => (arr, None),
 		[arr, separator] => (arr, Some(separator)),
@@ -96,8 +102,10 @@ fn len(args: &[Output]) -> Result<Output, ExecutionError> {
 
 pub fn build() -> FunctionLibrary {
 	let mut library = FunctionLibrary::new();
-	builtin!(library, range, "n");
-	builtin!(library, range, "n", "sep");
+	builtin!(library, range, "max");
+	builtin!(library, range, "min", "max");
+	builtin!(library, range, "min", "max", "step");
+	builtin!(library, range, "min", "max", "step", "sep");
 	builtin!(library, len, "arr");
 	builtin!(library, len, "arr", "sep");
 	builtin!(library, first, "arr", "n");

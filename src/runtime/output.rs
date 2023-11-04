@@ -1,10 +1,10 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::{Display, Debug}};
 
 use serde::{Deserialize, Serialize};
 
 use super::lazy::LazyParse;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Output {
 	value: Cow<'static, str>,
 	code: i64,
@@ -95,6 +95,18 @@ impl Output {
 	}
 	pub fn code(&self) -> i64 {
 		self.code
+	}
+}
+
+impl Display for Output {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "({}'{})", self.value, self.code)
+	}
+}
+
+impl Debug for Output {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "({}'{})", self.value, self.code)
 	}
 }
 

@@ -4,13 +4,17 @@ use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};
 
-type BuiltIn = fn(&[Output]) -> Result<Output, ExecutionError>;
+use itertools::Itertools as it;
 
+type BuiltIn = fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError>;
+
+#[derive(Clone)]
 pub enum Runnable {
 	Block(Block),
 	BuiltIn(BuiltIn),
 }
 
+#[derive(Clone)]
 pub struct AnonymousFunction {
 	pub args: Vec<FormalParameter>,
 	pub min_args: usize,
@@ -19,6 +23,7 @@ pub struct AnonymousFunction {
 	pub script: Option<String>,
 }
 
+#[derive(Clone)]
 pub struct FunctionLibrary {
 	functions: HashMap<String, Vec<AnonymousFunction>>,
 }
@@ -26,6 +31,25 @@ pub struct FunctionLibrary {
 #[derive(Debug)]
 pub enum RegisterError {
 	OverloadBuiltin(String),
+}
+
+impl AnonymousFunction {
+	fn signature(&self, name: &str) -> String {
+		let mut args = String::new();
+		let mut first = true;
+		for arg in self.args.iter() {
+			if first {
+				first = false;
+			} else {
+				args.push_str(", ");
+			}
+			if arg.vector {
+				args.push_str("%");
+			}
+			args.push_str(&arg.name);
+		}
+		format!("fn {}({})", name, args)
+	}
 }
 
 impl Display for RegisterError {
@@ -146,15 +170,40 @@ impl FunctionLibrary {
 		self.functions.get(name)
 	}
 
-	pub fn get_scripts(&self) -> String {
-		itertools::Itertools::intersperse(
-			self.functions
-				.iter()
-				.map(|f| f.1)
-				.flatten()
-				.filter_map(|f| f.script.as_ref().map(String::as_str)),
-			"\n",
-		)
-		.collect()
+	pub fn get_scripts(
+		&self,
+		include_builtin: bool,
+		include_script: bool,
+		name: Option<&str>,
+	) -> String {
+		let filtered_functions = self
+			.functions
+			.iter()
+			.filter(|func| {
+				if let Some(name) = &name {
+					func.0 == *name
+				} else {
+					true
+				}
+			})
+			.flat_map(|(name, funcs)| funcs.iter().map(move |f| (name, f)))
+			.filter_map(|(name, func)| {
+				if let Some(script) = &func.script {
+					if include_script {
+						Some(script.to_string())
+					} else {
+						None
+					}
+				} else {
+					if include_builtin {
+						Some(format!("{} {{\n    // built-in\n}}", func.signature(name)))
+					} else {
+						None
+					}
+				}
+			});
+
+		let result = itertools::join(filtered_functions, "\n");
+		result
 	}
 }

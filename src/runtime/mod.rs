@@ -187,26 +187,26 @@ fn execute_command_statement(
 			))
 		}
 	};
-	let mut outputs = vec![];
+	let mut arg_values = vec![];
 	for arg in &stmt.parameters {
 		let output = evaluate!(execute_value(functions, stack, &arg.value));
-		outputs.push(output);
+		arg_values.push(output);
 	}
 	match &func.runnable {
 		Runnable::Block(block) => {
-			let mut func_stack = ScopeStack::new_sibling(stack);
+			let mut func_stack = ScopeStack::call_frame(stack);
 			for arg in func.args.iter() {
 				if arg.vector {
-					let joined_values = outputs
+					let joined_values = arg_values
 						.iter()
 						.map(|output| output.value())
 						.collect::<Vec<&str>>()
 						.join(" ");
-					let last_code = outputs.last().map(|o| o.code()).unwrap_or(0);
-					func_stack.set_var(&arg.name, Output::new(joined_values.into(), last_code));
+					let last_code = arg_values.last().map(|o| o.code()).unwrap_or(0);
+					func_stack.declare_var(&arg.name, Output::new(joined_values.into(), last_code));
 					break;
 				} else {
-					func_stack.set_var(&arg.name, outputs.remove(0))
+					func_stack.declare_var(&arg.name, arg_values.remove(0))
 				}
 			}
 			let res = execute_block(functions, &mut func_stack, block);
@@ -216,7 +216,7 @@ fn execute_command_statement(
 			};
 			return res;
 		}
-		Runnable::BuiltIn(builtin) => return builtin(outputs.as_slice()).into(),
+		Runnable::BuiltIn(builtin) => return builtin(functions, arg_values.as_slice()).into(),
 	}
 }
 

@@ -14,25 +14,25 @@ pub struct Function {
 	pub(crate) script: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FormalParameter {
 	pub(crate) name: String,
 	pub(crate) vector: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Execution {
 	Block(Block),
 	ControlStatement(ControlStatement),
 	OpenStatement(OpenStatement),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
 	pub(crate) executions: Vec<Execution>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ControlStatement {
 	ForStatement(ForStatement),
 	IfStatement(IfStatement),
@@ -40,7 +40,7 @@ pub enum ControlStatement {
 	WhileStatement(WhileStatement),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum OpenStatement {
 	SetStmt(SetStatement),
 	ReturnStmt(ReturnStatement),
@@ -48,14 +48,14 @@ pub enum OpenStatement {
 	CommandStmt(CommandStatement),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Value {
 	String(FormatString),
 	Block(Box<Block>),
 	ControlStatement(Box<ControlStatement>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ForStatement {
 	pub(crate) variable: String,
 	pub(crate) split: Option<Value>,
@@ -63,48 +63,48 @@ pub struct ForStatement {
 	pub(crate) output: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfStatement {
 	pub(crate) condition: Value,
 	pub(crate) output: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfElseStatement {
 	pub(crate) condition: Value,
 	pub(crate) output_true: Value,
 	pub(crate) output_false: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WhileStatement {
 	pub(crate) condition: Value,
 	pub(crate) output: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SetStatement {
 	pub(crate) variable: String,
 	pub(crate) value: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ReturnStatement {
 	pub(crate) value: Option<Value>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ClearStatement {
 	pub(crate) value: Option<Value>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandStatement {
 	pub(crate) name: String,
 	pub(crate) parameters: Vec<ActualParameter>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ActualParameter {
 	pub(crate) value: Value,
 }
