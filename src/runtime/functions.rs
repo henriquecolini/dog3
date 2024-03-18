@@ -4,8 +4,6 @@ use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};
 
-use itertools::Itertools as it;
-
 type BuiltIn = fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError>;
 
 #[derive(Clone)]

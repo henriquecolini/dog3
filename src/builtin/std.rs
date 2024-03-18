@@ -3,7 +3,6 @@ use std::borrow::Cow;
 use crate::{
 	builtin, parser,
 	runtime::{
-		self,
 		functions::FunctionLibrary,
 		output::{join_outputs, Output},
 		ExecutionError, Runtime,
