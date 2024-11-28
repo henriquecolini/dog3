@@ -5,3 +5,4 @@ pub mod math;
 pub mod net;
 pub mod std;
 pub mod str;
+pub mod json;

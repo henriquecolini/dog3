@@ -36,21 +36,21 @@ impl Display for Error {
 }
 
 impl From<std::io::Error> for Error {
-    fn from(value: std::io::Error) -> Self {
-        Self::IO(value)
-    }
+	fn from(value: std::io::Error) -> Self {
+		Self::IO(value)
+	}
 }
 
 impl From<pest::error::Error<Rule>> for Error {
-    fn from(value: pest::error::Error<Rule>) -> Self {
-        Self::Syntax(value)
-    }
+	fn from(value: pest::error::Error<Rule>) -> Self {
+		Self::Syntax(value)
+	}
 }
 
 impl From<RegisterError> for Error {
-    fn from(value: RegisterError) -> Self {
-        Self::Library(value)
-    }
+	fn from(value: RegisterError) -> Self {
+		Self::Library(value)
+	}
 }
 
 fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
@@ -59,7 +59,8 @@ fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
 	runtime.library.merge(builtin::math::build())?;
 	runtime.library.merge(builtin::logic::build())?;
 	runtime.library.merge(builtin::net::build())?;
-	runtime.library.merge(builtin::str::build())
+	runtime.library.merge(builtin::str::build())?;
+	runtime.library.merge(builtin::json::build())
 }
 
 fn run() -> Result<(), Error> {

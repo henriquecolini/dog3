@@ -29,6 +29,24 @@ fn replace(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionErro
 	Ok(out)
 }
 
+fn search(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+	let (target, pattern) = match args {
+		[target, pattern] => (target, pattern),
+		_ => return Err(ExecutionError::InternalError),
+	};
+	let Ok(reg) = regex::Regex::new(pattern.value()) else {
+		return Ok(Output::new_falsy());
+	};
+	let mut out = Output::new_truthy();
+	for line in target.value().lines() {
+		if reg.is_match(line) {
+			out.append_str(line);
+			out.append_str("\n");
+		}
+	}
+	Ok(out)
+}
+
 fn is_alpha(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(
 		if args
@@ -64,6 +82,7 @@ pub fn build() -> FunctionLibrary {
 	builtin!(library, upper, "%args");
 	builtin!(library, lower, "%args");
 	builtin!(library, replace, "target", "from", "to");
+	builtin!(library, search, "target", "pattern");
 	builtin!(library, is_alpha, "%args");
 	builtin!(library, is_alphanumeric, "%args");
 	library
