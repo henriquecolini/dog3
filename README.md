@@ -308,3 +308,9 @@ Here are all the functions you can currently use. The list is small as the langu
 | post url | Outputs the response of an HTTP POST request on `url` | the status code of the response, unless it was 200, in which case truthy
 | post url body | Outputs the response of an HTTP POST request on `url`, with body `body` | the status code of the response, unless it was 200, in which case truthy
 | post url body timeout | Outputs the response of an HTTP POST request on `url`, with body `body`, waiting for at most `timeout` seconds | the status code of the response, unless it was 200, in which case truthy
+
+### Module `json`
+
+| Function | Description | Status |
+| -------- | ----------- | ------ |
+| gron input | Outputs a flattened (grepabble) version of the JSON `input` | truthy if `input` is a valid JSON
