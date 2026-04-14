@@ -24,9 +24,11 @@ fn replace(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionErro
 		[out, from, to] => (out, from, to),
 		_ => return Err(ExecutionError::InternalError),
 	};
-	let mut out = target.clone();
-	out.replace(out.value().replace(from.value(), to.value()).into());
-	Ok(out)
+	let Ok(regex) = regex::Regex::new(from.value()) else {
+		return Ok(Output::new_falsy());
+	};
+	let replaced = regex.replace_all(target.value(), to.value()).to_string();
+	Ok(Output::new_truthy_with(replaced.into()))
 }
 
 fn search(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
