@@ -54,8 +54,8 @@ impl AST for ForStatement {
 		match entry.as_rule() {
 			Rule::ForStmt => {
 				let mut variable = String::new();
-				let mut list = Value::String(FormatString::raw(""));
-				let mut output = Value::String(FormatString::raw(""));
+				let mut list = Value::String(FormatString::empty());
+				let mut output = Value::String(FormatString::empty());
 				let mut value_index = 0;
 				for pair in entry.into_inner() {
 					match pair.as_rule() {
@@ -81,8 +81,8 @@ impl AST for ForStatement {
 			}
 			Rule::ForSplitStmt => {
 				let mut variable = String::new();
-				let mut list = Value::String(FormatString::raw(""));
-				let mut output = Value::String(FormatString::raw(""));
+				let mut list = Value::String(FormatString::empty());
+				let mut output = Value::String(FormatString::empty());
 				let mut split = Value::String(FormatString::raw(" "));
 				let mut value_index = 0;
 				for pair in entry.into_inner() {
@@ -115,8 +115,8 @@ impl AST for ForStatement {
 
 impl AST for IfStatement {
 	fn build(entry: Pair<'_, Rule>) -> Self {
-		let mut condition = Value::String(FormatString::raw(""));
-		let mut output = Value::String(FormatString::raw(""));
+		let mut condition = Value::String(FormatString::empty());
+		let mut output = Value::String(FormatString::empty());
 		let mut value_index = 0;
 		for pair in entry.into_inner() {
 			match pair.as_rule() {
@@ -138,9 +138,9 @@ impl AST for IfStatement {
 
 impl AST for IfElseStatement {
 	fn build(entry: Pair<'_, Rule>) -> Self {
-		let mut condition = Value::String(FormatString::raw(""));
-		let mut output_true = Value::String(FormatString::raw(""));
-		let mut output_false = Value::String(FormatString::raw(""));
+		let mut condition = Value::String(FormatString::empty());
+		let mut output_true = Value::String(FormatString::empty());
+		let mut output_false = Value::String(FormatString::empty());
 		let mut value_index = 0;
 		for pair in entry.into_inner() {
 			match pair.as_rule() {
@@ -167,8 +167,8 @@ impl AST for IfElseStatement {
 
 impl AST for WhileStatement {
 	fn build(entry: Pair<'_, Rule>) -> Self {
-		let mut condition = Value::String(FormatString::raw(""));
-		let mut output = Value::String(FormatString::raw(""));
+		let mut condition = Value::String(FormatString::empty());
+		let mut output = Value::String(FormatString::empty());
 		let mut value_index = 0;
 		for pair in entry.into_inner() {
 			match pair.as_rule() {
@@ -231,7 +231,7 @@ impl AST for CommandStatement {
 impl AST for SetStatement {
 	fn build(entry: Pair<'_, Rule>) -> Self {
 		let mut variable = String::new();
-		let mut value = Value::String(FormatString::raw(""));
+		let mut value = Value::String(FormatString::empty());
 		for pair in entry.into_inner() {
 			match pair.as_rule() {
 				Rule::Identifier => variable = AST::build(pair),

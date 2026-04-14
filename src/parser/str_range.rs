@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct Range {
-	begin: usize,
-	len: usize,
+	pub begin: usize,
+	pub len: usize,
 }
 impl Range {
 	pub fn slice<'a>(&self, value: &'a str) -> &'a str {

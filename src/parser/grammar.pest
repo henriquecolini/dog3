@@ -32,13 +32,12 @@ KEYWORD = _{ If | Else | While | Fn | For | In | Split | Clear | Return }
 IDENTIFIER = _{ !(KEYWORD ~ (WHITE_SPACE|EOI)) ~ (!SPECIAL ~ !WHITE_SPACE ~ ANY)+ }
 VARIABLE   = _{ Dollar ~ (Destroy?) ~ IDENTIFIER }
 ESC        = _{ "\\" ~ ("\\" | "n" | "r" | "t") }
-SQ_ESC     = _{ "\\'" }
 DQ_ESC     = _{ "\\\"" }
 OS_ESC     = _{ "\\" ~ WHITE_SPACE }
 VAR_ESC    = _{ "\\" ~ Dollar | "\\" ~ Destroy }
 
 Identifier   = @{ IDENTIFIER }
-SQuoteString = @{ !KEYWORD ~ SQuote ~ (ESC | SQ_ESC | !("\\" | "'") ~ ANY)* ~ SQuote }
+SQuoteString = @{ !KEYWORD ~ SQuote ~ (!"'" ~ ANY)* ~ SQuote }
 DQuoteString = @{ !KEYWORD ~ DQuote ~ (ESC | DQ_ESC | VARIABLE | VAR_ESC | (!("\\" | DQuote | "$" | "%") ~ ANY) )* ~ DQuote }
 OpenString   = @{ !KEYWORD ~          (ESC | OS_ESC | VARIABLE | VAR_ESC | (!("\\" | SPECIAL | WHITE_SPACE) ~ ANY))+ }
 

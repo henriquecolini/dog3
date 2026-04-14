@@ -84,15 +84,27 @@ impl Region {
 }
 
 impl FormatString {
+	pub fn empty() -> FormatString {
+		FormatString {
+			value: "".to_owned(),
+			regions: vec![],
+		}
+	}
 	pub fn raw(value: &str) -> FormatString {
 		FormatString {
 			value: value.to_owned(),
-			regions: vec![],
+			regions: vec![Region::Raw(Range {
+				begin: 0,
+				len: value.len(),
+			})],
 		}
 	}
 	pub fn parse(raw: &str, expand_variables: bool) -> FormatString {
 		let raw = remove_ends(raw);
-		let mut target = FormatString::raw("");
+		if !expand_variables {
+			return FormatString::raw(raw);
+		}
+		let mut target = FormatString::empty();
 		if raw.len() == 0 {
 			return target;
 		}
