@@ -18,7 +18,7 @@ macro_rules! builtin_alias {
 					parameters.push(formal_param);
 				)*
 			$library
-			.add_builtin($alias, parameters, $func);
+			.add_builtin($alias, parameters, ::std::boxed::Box::new($func));
 		}
 	};
 }

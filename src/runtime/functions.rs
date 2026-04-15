@@ -1,12 +1,11 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, sync::Arc};
 
 use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};
 
-type BuiltIn = fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError>;
+type BuiltIn = Box<dyn Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError>>;
 
-#[derive(Clone)]
 pub enum Runnable {
 	Block(Block),
 	BuiltIn(BuiltIn),
@@ -17,7 +16,7 @@ pub struct AnonymousFunction {
 	pub args: Vec<FormalParameter>,
 	pub min_args: usize,
 	pub max_args: usize,
-	pub runnable: Runnable,
+	pub runnable: Arc<Runnable>,
 	pub script: Option<String>,
 }
 
@@ -63,7 +62,7 @@ impl Display for RegisterError {
 impl AnonymousFunction {
 	fn new(
 		args: Vec<FormalParameter>,
-		runnable: Runnable,
+		runnable: Arc<Runnable>,
 		script: Option<String>,
 	) -> AnonymousFunction {
 		let mut has_vector = false;
@@ -89,7 +88,7 @@ impl AnonymousFunction {
 		self.min_args <= other.max_args && self.max_args >= other.min_args
 	}
 	fn is_builtin(&self) -> bool {
-		match self.runnable {
+		match *self.runnable {
 			Runnable::Block(_) => false,
 			Runnable::BuiltIn(_) => true,
 		}
@@ -103,13 +102,13 @@ impl FunctionLibrary {
 		}
 	}
 	pub fn add_builtin(&mut self, name: &str, args: Vec<FormalParameter>, runnable: BuiltIn) {
-		let _ = self.add(name, args, Runnable::BuiltIn(runnable), None);
+		let _ = self.add(name, args, Arc::new(Runnable::BuiltIn(runnable)), None);
 	}
 	pub fn add_script(&mut self, runnable: Function) -> Result<String, RegisterError> {
 		self.add(
 			&runnable.name,
 			runnable.args,
-			Runnable::Block(runnable.block),
+			Arc::new(Runnable::Block(runnable.block)),
 			Some(runnable.script),
 		)
 	}
@@ -124,7 +123,7 @@ impl FunctionLibrary {
 		&mut self,
 		name: &str,
 		args: Vec<FormalParameter>,
-		runnable: Runnable,
+		runnable: Arc<Runnable>,
 		script: Option<String>,
 	) -> Result<String, RegisterError> {
 		let current = self.functions.get_mut(name);

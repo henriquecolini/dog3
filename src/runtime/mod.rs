@@ -192,7 +192,7 @@ fn execute_command_statement(
 		let output = evaluate!(execute_value(functions, stack, &arg.value));
 		arg_values.push(output);
 	}
-	match &func.runnable {
+	match func.runnable.as_ref() {
 		Runnable::Block(block) => {
 			let mut func_stack = ScopeStack::call_frame(stack);
 			for arg in func.args.iter() {
@@ -209,7 +209,7 @@ fn execute_command_statement(
 					func_stack.declare_var(&arg.name, arg_values.remove(0))
 				}
 			}
-			let res = execute_block(functions, &mut func_stack, block);
+			let res = execute_block(functions, &mut func_stack, &block);
 			let res = match res {
 				Next::Return(out) => Next::Append(out),
 				other => other,
