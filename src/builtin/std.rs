@@ -3,9 +3,7 @@ use std::borrow::Cow;
 use crate::{
 	builtin, parser,
 	runtime::{
-		functions::FunctionLibrary,
-		output::{join_outputs, Output},
-		ExecutionError, Runtime,
+		ExecutionError, Runtime, functions::FunctionLibrary, output::{Output, join_outputs}, scope::ScopeStack
 	},
 };
 
@@ -14,30 +12,30 @@ use crate::{
 // possible builtin signatures, such as
 // enum Builtin { One(Fn(Output) -> Output), Two(Fn(Output, Output) -> Output), ..., Any(Fn(Iterator<Output>) -> Output) }
 
-fn put(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn put(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(join_outputs(args.iter()))
 }
 
-fn pln(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn pln(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.append_str("\n");
 	Ok(out)
 }
 
-fn print(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn print(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let out = join_outputs(args.iter());
 	print!("{}", out.value());
 	Ok(Output::new_truthy())
 }
 
-fn println(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn println(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.append_str("\n");
 	print!("{}", out.value());
 	Ok(Output::new_truthy())
 }
 
-fn status(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn status(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[value] => Ok(Output::new(value.code().to_string().into(), value.code())),
 		[value, status] => {
@@ -54,7 +52,7 @@ fn status(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError
 	}
 }
 
-fn src(fl: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn src(fl: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[value] => Ok(Output::new_truthy_with(
 			fl.get_scripts(true, true, Some(value.value())).into(),
@@ -63,7 +61,7 @@ fn src(fl: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> 
 	}
 }
 
-fn eval(fl: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn eval(fl: &FunctionLibrary, stack: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[value] => {
 			let program = parser::parse(&value.value());
@@ -78,7 +76,7 @@ fn eval(fl: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError>
 						Ok(_) => (),
 						Err(err) => return Ok(Output::new_falsy_with(err.to_string().into())),
 					};
-					match runtime.execute(&program.executions) {
+					match runtime.execute_scoped(stack, &program.executions) {
 						Ok(output) => Ok(output),
 						Err(err) => Ok(Output::new_falsy_with(err.to_string().into())),
 					}

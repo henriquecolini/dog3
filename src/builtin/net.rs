@@ -2,7 +2,7 @@ use minreq::Request;
 
 use crate::{
 	builtin,
-	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
+	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
 fn request_output(req: Request) -> Output {
@@ -34,7 +34,7 @@ fn request_timeout(req: Request, timeout: Option<Result<i64, ()>>) -> Result<Req
 	}
 }
 
-fn get(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn get(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (url, timeout) = match args {
 		[url] => (url, None),
 		[url, timeout] => (url, Some(timeout.try_into())),
@@ -48,7 +48,7 @@ fn get(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(request_output(req))
 }
 
-fn post(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn post(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (url, body, timeout) = match args {
 		[url] => (url, "", None),
 		[url, body] => (url, body.value(), None),

@@ -1,17 +1,17 @@
 use crate::{
 	builtin, builtin_alias,
-	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
+	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn truthy(_: &FunctionLibrary, _: &[Output]) -> Result<Output, ExecutionError> {
+fn truthy(_: &FunctionLibrary, _: &mut ScopeStack, _: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(Output::new_truthy())
 }
 
-fn falsy(_: &FunctionLibrary, _: &[Output]) -> Result<Output, ExecutionError> {
+fn falsy(_: &FunctionLibrary, _: &mut ScopeStack, _: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(Output::new_falsy())
 }
 
-fn eq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn eq(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -25,7 +25,7 @@ fn eq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn neq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn neq(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -39,7 +39,7 @@ fn neq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn gt(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn gt(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -53,7 +53,7 @@ fn gt(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn lt(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn lt(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -67,7 +67,7 @@ fn lt(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn geq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn geq(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -81,7 +81,7 @@ fn geq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn leq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn leq(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			let a: Result<f64, _> = a.try_into();
@@ -95,7 +95,7 @@ fn leq(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn like(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn like(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok(Output::new(
 			"".into(),
@@ -105,7 +105,7 @@ fn like(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> 
 	}
 }
 
-fn and(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn and(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			Output::new(
@@ -117,7 +117,7 @@ fn and(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn or(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn or(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a, b] => Ok({
 			Output::new(
@@ -129,7 +129,7 @@ fn or(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	}
 }
 
-fn not(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn not(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	match args {
 		[a] => Ok(Output::new("".into(), if a.is_truthy() { 1 } else { 0 })),
 		_ => Err(ExecutionError::InternalError),

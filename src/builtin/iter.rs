@@ -1,9 +1,9 @@
 use crate::{
 	builtin,
-	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
+	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn range(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn range(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	#[rustfmt::skip]
 	let (min, max, step, separator): (Result<i64, _>, Result<i64, _>, Result<i64, _>, _) = match args {
 		[max]                       => (Ok(0),          max.try_into(), Ok(1),           " "),
@@ -25,7 +25,7 @@ fn range(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError>
 	})
 }
 
-fn first(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn first(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, n, separator) = match &args {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
@@ -47,7 +47,7 @@ fn first(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError>
 	Ok(Output::new_truthy_with(arr[..n].join(separator).into()))
 }
 
-fn last(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn last(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, n, separator) = match &args {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
@@ -71,7 +71,7 @@ fn last(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> 
 	))
 }
 
-fn append(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn append(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (left, right, separator) = match &args {
 		[left, right] => (left, right, None),
 		[left, right, separator] => (left, right, Some(separator)),
@@ -89,7 +89,7 @@ fn append(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError
 	))
 }
 
-fn len(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn len(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (arr, separator) = match &args {
 		[arr] => (arr, None),
 		[arr, separator] => (arr, Some(separator)),

@@ -1,12 +1,12 @@
 use std::{collections::HashMap, fmt::Display, sync::Arc};
 
-use crate::parser::grammar::{Block, FormalParameter, Function};
+use crate::{parser::grammar::{Block, FormalParameter, Function}, runtime::scope::ScopeStack};
 
 use super::{output::Output, ExecutionError};
 
-pub trait BuiltIn: Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError> + Sync + Send {}
+pub trait BuiltIn: Fn(&FunctionLibrary, &mut ScopeStack, &[Output]) -> Result<Output, ExecutionError> + Sync + Send {}
 
-impl<T: Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError> + Sync + Send> BuiltIn for T {}
+impl<T: Fn(&FunctionLibrary, &mut ScopeStack, &[Output]) -> Result<Output, ExecutionError> + Sync + Send> BuiltIn for T {}
 
 pub enum Runnable {
 	Block(Block),

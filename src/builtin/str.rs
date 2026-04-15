@@ -1,25 +1,23 @@
 use crate::{
 	builtin,
 	runtime::{
-		functions::FunctionLibrary,
-		output::{join_outputs, Output},
-		ExecutionError,
+		ExecutionError, functions::FunctionLibrary, output::{Output, join_outputs}, scope::ScopeStack
 	},
 };
 
-fn upper(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn upper(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.replace(out.value().to_uppercase().into());
 	Ok(out)
 }
 
-fn lower(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn lower(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.replace(out.value().to_lowercase().into());
 	Ok(out)
 }
 
-fn replace(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn replace(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (target, from, to) = match args {
 		[out, from, to] => (out, from, to),
 		_ => return Err(ExecutionError::InternalError),
@@ -31,7 +29,7 @@ fn replace(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionErro
 	Ok(Output::new_truthy_with(replaced.into()))
 }
 
-fn search(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn search(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (target, pattern) = match args {
 		[target, pattern] => (target, pattern),
 		_ => return Err(ExecutionError::InternalError),
@@ -55,7 +53,7 @@ fn search(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError
 	}
 }
 
-fn is_alpha(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn is_alpha(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(
 		if args
 			.iter()
@@ -70,7 +68,7 @@ fn is_alpha(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionErr
 	)
 }
 
-fn is_alphanumeric(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn is_alphanumeric(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(
 		if args
 			.iter()

@@ -2,7 +2,7 @@ use rand::Rng;
 
 use crate::{
 	builtin,
-	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
+	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
 fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
@@ -26,7 +26,7 @@ fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
 	}
 }
 
-fn add(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn add(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -39,7 +39,7 @@ fn add(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn sub(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn sub(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -52,7 +52,7 @@ fn sub(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn mul(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn mul(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -65,7 +65,7 @@ fn mul(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn div(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn div(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -78,7 +78,7 @@ fn div(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn max(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn max(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -93,7 +93,7 @@ fn max(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn min(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn min(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -108,7 +108,7 @@ fn min(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
 	})
 }
 
-fn floor(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn floor(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let number: Result<f64, _> = match args {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
@@ -119,7 +119,7 @@ fn floor(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError>
 	})
 }
 
-fn ceil(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn ceil(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let number: Result<f64, _> = match args {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
@@ -130,7 +130,7 @@ fn ceil(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> 
 	})
 }
 
-fn random(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn random(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let (min, max) = match args {
 		[max] => (Ok(0), max.try_into()),
 		[min, max] => (min.try_into(), max.try_into()),

@@ -4,10 +4,10 @@ use serde_json::Value;
 
 use crate::{
 	builtin,
-	runtime::{functions::FunctionLibrary, output::Output, ExecutionError},
+	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn gron(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
+fn gron(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
 	let input = match args {
 		[input] => input,
 		_ => return Err(ExecutionError::InternalError),

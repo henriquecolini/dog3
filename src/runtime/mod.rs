@@ -216,7 +216,7 @@ fn execute_command_statement(
 			};
 			return res;
 		}
-		Runnable::BuiltIn(builtin) => return builtin(functions, arg_values.as_slice()).into(),
+		Runnable::BuiltIn(builtin) => return builtin(functions, stack, arg_values.as_slice()).into(),
 	}
 }
 
@@ -365,6 +365,15 @@ impl Runtime {
 	pub fn execute(&mut self, execs: &[Execution]) -> Result<Output, ExecutionError> {
 		let mut glob = ScopeStack::new(&mut self.globals);
 		let res = execute_statements(&self.library, &mut glob, &execs);
+		match res {
+			Next::Append(output) => Ok(output),
+			Next::Return(output) => Ok(output),
+			Next::Abort(err) => Err(err),
+			_ => Err(ExecutionError::InternalError),
+		}
+	}
+	pub fn execute_scoped(&mut self, stack: &mut ScopeStack, execs: &[Execution]) -> Result<Output, ExecutionError> {
+		let res = execute_statements(&self.library, stack, &execs);
 		match res {
 			Next::Append(output) => Ok(output),
 			Next::Return(output) => Ok(output),
