@@ -8,16 +8,16 @@ pub struct Program {
 
 #[derive(Debug)]
 pub struct Function {
-	pub(crate) name: String,
-	pub(crate) args: Vec<FormalParameter>,
-	pub(crate) block: Block,
-	pub(crate) script: String,
+	pub name: String,
+	pub args: Vec<FormalParameter>,
+	pub block: Block,
+	pub script: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct FormalParameter {
-	pub(crate) name: String,
-	pub(crate) vector: bool,
+	pub name: String,
+	pub vector: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -29,7 +29,7 @@ pub enum Execution {
 
 #[derive(Debug, Clone)]
 pub struct Block {
-	pub(crate) executions: Vec<Execution>,
+	pub executions: Vec<Execution>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,56 +57,56 @@ pub enum Value {
 
 #[derive(Debug, Clone)]
 pub struct ForStatement {
-	pub(crate) variable: String,
-	pub(crate) split: Option<Value>,
-	pub(crate) list: Value,
-	pub(crate) output: Value,
+	pub variable: String,
+	pub split: Option<Value>,
+	pub list: Value,
+	pub output: Value,
 }
 
 #[derive(Debug, Clone)]
 pub struct IfStatement {
-	pub(crate) condition: Value,
-	pub(crate) output: Value,
+	pub condition: Value,
+	pub output: Value,
 }
 
 #[derive(Debug, Clone)]
 pub struct IfElseStatement {
-	pub(crate) condition: Value,
-	pub(crate) output_true: Value,
-	pub(crate) output_false: Value,
+	pub condition: Value,
+	pub output_true: Value,
+	pub output_false: Value,
 }
 
 #[derive(Debug, Clone)]
 pub struct WhileStatement {
-	pub(crate) condition: Value,
-	pub(crate) output: Value,
+	pub condition: Value,
+	pub output: Value,
 }
 
 #[derive(Debug, Clone)]
 pub struct SetStatement {
-	pub(crate) variable: String,
-	pub(crate) value: Value,
+	pub variable: String,
+	pub value: Value,
 }
 
 #[derive(Debug, Clone)]
 pub struct ReturnStatement {
-	pub(crate) value: Option<Value>,
+	pub value: Option<Value>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ClearStatement {
-	pub(crate) value: Option<Value>,
+	pub value: Option<Value>,
 }
 
 #[derive(Debug, Clone)]
 pub struct CommandStatement {
-	pub(crate) name: String,
-	pub(crate) parameters: Vec<ActualParameter>,
+	pub name: String,
+	pub parameters: Vec<ActualParameter>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ActualParameter {
-	pub(crate) value: Value,
+	pub value: Value,
 }
 
 impl FormalParameter {
