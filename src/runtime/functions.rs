@@ -4,11 +4,13 @@ use crate::parser::grammar::{Block, FormalParameter, Function};
 
 use super::{output::Output, ExecutionError};
 
-type BuiltIn = Box<dyn Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError>>;
+pub trait BuiltIn: Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError> + Sync + Send {}
+
+impl<T: Fn(&FunctionLibrary, &[Output]) -> Result<Output, ExecutionError> + Sync + Send> BuiltIn for T {}
 
 pub enum Runnable {
 	Block(Block),
-	BuiltIn(BuiltIn),
+	BuiltIn(Box<dyn BuiltIn>),
 }
 
 #[derive(Clone)]
@@ -101,7 +103,7 @@ impl FunctionLibrary {
 			functions: HashMap::new(),
 		}
 	}
-	pub fn add_builtin(&mut self, name: &str, args: Vec<FormalParameter>, runnable: BuiltIn) {
+	pub fn add_builtin(&mut self, name: &str, args: Vec<FormalParameter>, runnable: Box<dyn BuiltIn>) {
 		let _ = self.add(name, args, Arc::new(Runnable::BuiltIn(runnable)), None);
 	}
 	pub fn add_script(&mut self, runnable: Function) -> Result<String, RegisterError> {
