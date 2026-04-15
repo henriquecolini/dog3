@@ -40,13 +40,19 @@ fn search(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError
 		return Ok(Output::new_falsy());
 	};
 	let mut out = Output::new_truthy();
+	let mut any_match = false;
 	for line in target.value().lines() {
 		if reg.is_match(line) {
 			out.append_str(line);
 			out.append_str("\n");
+			any_match = true;
 		}
 	}
-	Ok(out)
+	if !any_match {
+		Ok(Output::new_falsy())
+	} else {
+		Ok(out)
+	}
 }
 
 fn is_alpha(_: &FunctionLibrary, args: &[Output]) -> Result<Output, ExecutionError> {
