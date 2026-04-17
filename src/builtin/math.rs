@@ -5,8 +5,8 @@ use crate::{
 	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
-	match args {
+fn numbers(args: Vec<Output>) -> Option<(f64, Vec<f64>)> {
+	match args.as_slice() {
 		[first, rest @ ..] => {
 			let first = match first.try_into() {
 				Ok(x) => x,
@@ -26,7 +26,7 @@ fn numbers(args: &[Output]) -> Option<(f64, Vec<f64>)> {
 	}
 }
 
-fn add(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn add(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -39,7 +39,7 @@ fn add(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn sub(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn sub(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -52,7 +52,7 @@ fn sub(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn mul(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn mul(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -65,7 +65,7 @@ fn mul(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn div(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn div(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -78,7 +78,7 @@ fn div(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn max(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn max(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -93,7 +93,7 @@ fn max(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn min(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn min(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(match numbers(args) {
 		Some((first, numbers)) => {
 			let mut val = first;
@@ -108,8 +108,8 @@ fn min(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outpu
 	})
 }
 
-fn floor(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let number: Result<f64, _> = match args {
+async fn floor(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let number: Result<f64, _> = match args.as_slice() {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
 	};
@@ -119,8 +119,8 @@ fn floor(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Out
 	})
 }
 
-fn ceil(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let number: Result<f64, _> = match args {
+async fn ceil(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let number: Result<f64, _> = match args.as_slice() {
 		[number] => number.try_into(),
 		_ => return Err(ExecutionError::InternalError),
 	};
@@ -130,8 +130,8 @@ fn ceil(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outp
 	})
 }
 
-fn random(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (min, max) = match args {
+async fn random(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (min, max) = match args.as_slice() {
 		[max] => (Ok(0), max.try_into()),
 		[min, max] => (min.try_into(), max.try_into()),
 		_ => return Err(ExecutionError::InternalError),

@@ -1,66 +1,73 @@
-use minreq::Request;
-
 use crate::{
 	builtin,
 	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn request_output(req: Request) -> Output {
-	match req.send() {
-		Ok(resp) => {
-			let status = resp.status_code;
-			let status = if status == 200 { 0 } else { status }.into();
-			let bytes = resp.into_bytes();
-			match String::from_utf8(bytes) {
-				Ok(s) => Output::new(s.into(), status),
-				Err(_) => Output::new("".into(), status),
-			}
-		}
-		Err(_) => Output::new_falsy(),
-	}
+async fn request_output(resp: reqwest::Response) -> Output {
+    let status = resp.status().as_u16();
+    let status = if status == 200 { 0 } else { status }.into();
+
+    match resp.text().await {
+        Ok(text) => Output::new(text.into(), status),
+        Err(_) => Output::new("".into(), status),
+    }
 }
 
-fn request_timeout(req: Request, timeout: Option<Result<i64, ()>>) -> Result<Request, ()> {
-	match timeout {
-		Some(timeout) => {
-			let timeout: i64 = match timeout {
-				Ok(timeout) if timeout >= 0 => timeout,
-				_ => return Err(()),
-			};
-			let timeout = timeout as u64;
-			Ok(req.with_timeout(timeout))
-		}
-		None => Ok(req),
-	}
+async fn get(
+    _: &FunctionLibrary,
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
+) -> Result<Output, ExecutionError> {
+    let (url, timeout) = match args.as_slice() {
+        [url] => (url, None),
+        [url, timeout] => (url, Some(TryInto::<i64>::try_into(timeout))),
+        _ => return Err(ExecutionError::InternalError),
+    };
+
+    let client = reqwest::Client::new();
+
+    let mut req = client.get(url.value());
+
+    if let Some(Ok(t)) = timeout {
+        if t < 0 {
+            return Ok(Output::new_falsy());
+        }
+        req = req.timeout(std::time::Duration::from_secs(t as u64));
+    }
+
+    match req.send().await {
+        Ok(resp) => Ok(request_output(resp).await),
+        Err(_) => Ok(Output::new_falsy()),
+    }
 }
 
-fn get(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (url, timeout) = match args {
-		[url] => (url, None),
-		[url, timeout] => (url, Some(timeout.try_into())),
-		_ => return Err(ExecutionError::InternalError),
-	};
-	let req = minreq::get(url.value());
-	let req = match request_timeout(req, timeout) {
-		Ok(req) => req,
-		Err(_) => return Ok(Output::new_falsy()),
-	};
-	Ok(request_output(req))
-}
+async fn post(
+    _: &FunctionLibrary,
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
+) -> Result<Output, ExecutionError> {
+    let (url, body, timeout) = match args.as_slice() {
+        [url] => (url, "", None),
+        [url, body] => (url, body.value(), None),
+        [url, body, timeout] => (url, body.value(), Some(TryInto::<i64>::try_into(timeout))),
+        _ => return Err(ExecutionError::InternalError),
+    };
 
-fn post(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (url, body, timeout) = match args {
-		[url] => (url, "", None),
-		[url, body] => (url, body.value(), None),
-		[url, body, timeout] => (url, body.value(), Some(timeout.try_into())),
-		_ => return Err(ExecutionError::InternalError),
-	};
-	let req = minreq::post(url.value()).with_body(body);
-	let req = match request_timeout(req, timeout) {
-		Ok(req) => req,
-		Err(_) => return Ok(Output::new_falsy()),
-	};
-	Ok(request_output(req))
+    let client = reqwest::Client::new();
+
+    let mut req = client.post(url.value()).body(body.to_string());
+
+    if let Some(Ok(t)) = timeout {
+        if t < 0 {
+            return Ok(Output::new_falsy());
+        }
+        req = req.timeout(std::time::Duration::from_secs(t as u64));
+    }
+
+    match req.send().await {
+        Ok(resp) => Ok(request_output(resp).await),
+        Err(_) => Ok(Output::new_falsy()),
+    }
 }
 
 pub fn build() -> FunctionLibrary {

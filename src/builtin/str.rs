@@ -5,20 +5,20 @@ use crate::{
 	},
 };
 
-fn upper(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn upper(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.replace(out.value().to_uppercase().into());
 	Ok(out)
 }
 
-fn lower(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn lower(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	let mut out = join_outputs(args.iter());
 	out.replace(out.value().to_lowercase().into());
 	Ok(out)
 }
 
-fn replace(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (target, from, to) = match args {
+async fn replace(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (target, from, to) = match args.as_slice() {
 		[out, from, to] => (out, from, to),
 		_ => return Err(ExecutionError::InternalError),
 	};
@@ -29,8 +29,8 @@ fn replace(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<O
 	Ok(Output::new_truthy_with(replaced.into()))
 }
 
-fn search(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (target, pattern) = match args {
+async fn search(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (target, pattern) = match args.as_slice() {
 		[target, pattern] => (target, pattern),
 		_ => return Err(ExecutionError::InternalError),
 	};
@@ -53,7 +53,7 @@ fn search(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Ou
 	}
 }
 
-fn is_alpha(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn is_alpha(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(
 		if args
 			.iter()
@@ -68,7 +68,7 @@ fn is_alpha(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<
 	)
 }
 
-fn is_alphanumeric(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn is_alphanumeric(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	Ok(
 		if args
 			.iter()

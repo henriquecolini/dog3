@@ -7,12 +7,12 @@ use crate::{
     runtime::{functions::FunctionLibrary, output::Output, scope::ScopeStack, ExecutionError},
 };
 
-fn gron(
+async fn gron(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let input = match args {
+    let input = match args.as_slice() {
         [input] => input,
         _ => return Err(ExecutionError::InternalError),
     };
@@ -45,12 +45,12 @@ fn gron(
     Ok(Output::new_truthy_with(output.into()))
 }
 
-fn jstr(
+async fn jstr(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let input = match args {
+    let input = match args.as_slice() {
         [input] => input,
         _ => return Err(ExecutionError::InternalError),
     };
@@ -60,12 +60,12 @@ fn jstr(
     Ok(Output::new_truthy_with(input.into()))
 }
 
-fn jnum(
+async fn jnum(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let input = match args {
+    let input = match args.as_slice() {
         [input] => input,
         _ => return Err(ExecutionError::InternalError),
     };
@@ -94,10 +94,10 @@ fn fallback_to_str_value<'a>(value: &'a str) -> Value {
     }
 }
 
-fn jarr(
+async fn jarr(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
     let mut output = String::new();
     let mut first = true;
@@ -113,10 +113,10 @@ fn jarr(
     Ok(Output::new_truthy_with(output.into()))
 }
 
-fn jobj(
+async fn jobj(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
     let mut output = String::new();
     let mut first = true;
@@ -142,12 +142,12 @@ fn jobj(
     Ok(Output::new_truthy_with(output.into()))
 }
 
-fn jstr_parse(
+async fn jstr_parse(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let input = match args {
+    let input = match args.as_slice() {
         [input] => input,
         _ => return Err(ExecutionError::InternalError),
     };
@@ -157,12 +157,12 @@ fn jstr_parse(
     Ok(Output::new_truthy_with(input.into()))
 }
 
-fn jpush(
+async fn jpush(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let (obj, items) = match args {
+    let (obj, items) = match args.as_slice() {
         [obj, items @ ..] => (obj, items),
         _ => return Err(ExecutionError::InternalError),
     };
@@ -192,12 +192,12 @@ fn jpush(
     }
 }
 
-fn jlen(
+async fn jlen(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let obj = match args {
+    let obj = match args.as_slice() {
         [obj] => obj,
         _ => return Err(ExecutionError::InternalError),
     };
@@ -210,12 +210,12 @@ fn jlen(
     }
 }
 
-fn jget(
+async fn jget(
     _: &FunctionLibrary,
-    _: &mut ScopeStack,
-    args: &[Output],
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
 ) -> Result<Output, ExecutionError> {
-    let (obj, key) = match args {
+    let (obj, key) = match args.as_slice() {
         [obj, key] => (obj, key),
         _ => return Err(ExecutionError::InternalError),
     };

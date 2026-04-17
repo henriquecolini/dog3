@@ -18,7 +18,24 @@ macro_rules! builtin_alias {
 					parameters.push(formal_param);
 				)*
 			$library
-			.add_builtin($alias, parameters, ::std::boxed::Box::new($func));
+			.add_builtin(
+				$alias,
+				parameters,
+				{
+					fn __builtin_impl<'env, 'stack>(
+						lib: &'stack FunctionLibrary,
+						scope: &'stack mut ScopeStack<'env>,
+						args: Vec<Output>,
+					) -> ::std::pin::Pin<
+						Box<dyn ::std::future::Future<Output = Result<Output, ExecutionError>> + Send + 'stack>
+					> {
+						let fut = $func(lib, scope, args);
+						Box::pin(fut)
+					}
+
+					Box::new(__builtin_impl)
+				}
+			);
 		}
 	};
 }

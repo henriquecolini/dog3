@@ -63,7 +63,7 @@ fn register_libraries(runtime: &mut Runtime) -> Result<String, RegisterError> {
 	runtime.library.merge(builtin::json::build())
 }
 
-fn run() -> Result<(), Error> {
+async fn run() -> Result<(), Error> {
 	let args = Args::parse();
 	let mut inputs = vec![];
 	for path in args.inputs {
@@ -78,15 +78,16 @@ fn run() -> Result<(), Error> {
 	register_libraries(&mut runtime)?;
 	let program = parse(&inputs.join("\n"))?;
 	runtime.library.add_scripts(program.functions)?;
-	match runtime.execute(&program.executions) {
+	match runtime.execute(&program.executions).await {
 		Ok(output) => print!("{}", output.value()),
 		Err(err) => eprintln!("{}", err),
 	}
 	Ok(())
 }
 
-fn main() -> ExitCode {
-	match run() {
+#[tokio::main]
+async fn main() -> ExitCode {
+	match run().await {
 		Ok(_) => ExitCode::SUCCESS,
 		Err(err) => {
 			println!("{}", err);

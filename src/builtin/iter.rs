@@ -3,9 +3,9 @@ use crate::{
 	runtime::{ExecutionError, functions::FunctionLibrary, output::Output, scope::ScopeStack},
 };
 
-fn range(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+async fn range(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
 	#[rustfmt::skip]
-	let (min, max, step, separator): (Result<i64, _>, Result<i64, _>, Result<i64, _>, _) = match args {
+	let (min, max, step, separator): (Result<i64, _>, Result<i64, _>, Result<i64, _>, _) = match args.as_slice() {
 		[max]                       => (Ok(0),          max.try_into(), Ok(1),           " "),
 		[min, max]                  => (min.try_into(), max.try_into(), Ok(1),           " "),
 		[min, max, step]            => (min.try_into(), max.try_into(), step.try_into(), " "),
@@ -25,8 +25,8 @@ fn range(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Out
 	})
 }
 
-fn first(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (arr, n, separator) = match &args {
+async fn first(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (arr, n, separator) = match args.as_slice() {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
 		_ => return Err(ExecutionError::InternalError),
@@ -47,8 +47,8 @@ fn first(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Out
 	Ok(Output::new_truthy_with(arr[..n].join(separator).into()))
 }
 
-fn last(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (arr, n, separator) = match &args {
+async fn last(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (arr, n, separator) = match args.as_slice() {
 		[arr, n] => (arr, n.try_into(), None),
 		[arr, n, separator] => (arr, n.try_into(), Some(separator)),
 		_ => return Err(ExecutionError::InternalError),
@@ -71,8 +71,8 @@ fn last(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Outp
 	))
 }
 
-fn append(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (left, right, separator) = match &args {
+async fn append(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (left, right, separator) = match args.as_slice() {
 		[left, right] => (left, right, None),
 		[left, right, separator] => (left, right, Some(separator)),
 		_ => return Err(ExecutionError::InternalError),
@@ -89,8 +89,8 @@ fn append(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Ou
 	))
 }
 
-fn len(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
-	let (arr, separator) = match &args {
+async fn len(_: &FunctionLibrary, _: &mut ScopeStack<'_>, args: Vec<Output>) -> Result<Output, ExecutionError> {
+	let (arr, separator) = match args.as_slice() {
 		[arr] => (arr, None),
 		[arr, separator] => (arr, Some(separator)),
 		_ => return Err(ExecutionError::InternalError),
