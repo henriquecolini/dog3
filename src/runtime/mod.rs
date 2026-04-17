@@ -37,6 +37,7 @@ pub enum ExecutionError {
 	UndefinedFunction(String),
 	UndefinedOverload(String, usize),
 	InternalError,
+	Custom(String)
 }
 
 macro_rules! scoped {
@@ -84,6 +85,7 @@ impl Display for ExecutionError {
 				)
 			}
 			ExecutionError::InternalError => write!(f, "error: Internal runtime error"),
+			ExecutionError::Custom(err) => write!(f, "error: {err}"),
 		}
 	}
 }

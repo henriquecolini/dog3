@@ -88,6 +88,15 @@ fn eval(fl: &FunctionLibrary, stack: &mut ScopeStack, args: &[Output]) -> Result
 	}
 }
 
+fn panic(_: &FunctionLibrary, _: &mut ScopeStack, args: &[Output]) -> Result<Output, ExecutionError> {
+	match args {
+		[value] => {
+			Err(ExecutionError::Custom(value.value().into()))
+		}
+		_ => Err(ExecutionError::InternalError),
+	}
+}
+
 pub fn build() -> FunctionLibrary {
 	let mut library = FunctionLibrary::new();
 	builtin!(library, put, "%args");
@@ -98,5 +107,7 @@ pub fn build() -> FunctionLibrary {
 	builtin!(library, status, "value", "status");
 	builtin!(library, src, "function");
 	builtin!(library, eval, "code");
+	builtin!(library, panic,);
+	builtin!(library, panic, "message");
 	library
 }
