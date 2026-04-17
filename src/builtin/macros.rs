@@ -21,10 +21,7 @@ macro_rules! builtin_params {
 
 #[macro_export]
 macro_rules! builtin_alias {
-	($library:expr, $func:expr, $alias:expr) => {
-		builtin_alias!($library,$func,$alias,)
-	};
-	($library:expr, $func:expr, $alias:expr, $($param:expr),* $(,)?) => {
+	($library:expr, $func:expr, $alias:expr $(, $param:expr)* $(,)?) => {
 		{
 			$crate::runtime::functions::FunctionLibrary::add_builtin(
 				&mut $library,
@@ -50,8 +47,33 @@ macro_rules! builtin_alias {
 }
 
 #[macro_export]
+macro_rules! builtin_state_alias {
+	($library:expr, $func:expr, $alias:expr, $state:expr $(, $param:expr)* $(,)?) => {
+		{
+			$crate::runtime::functions::FunctionLibrary::add_builtin(
+				&mut $library,
+				$alias,
+				$crate::builtin_params![$($param),*],
+				$crate::runtime::functions::builtin_state(
+					$state,
+					|ctx, lib, scope, args| Box::pin($func(ctx, lib, scope, args))
+				)
+			);
+		}
+	};
+}
+
+#[macro_export]
+macro_rules! builtin_state {
+	($library:expr, $name:expr, $state:expr $(, $param:expr)* $(,)?) => {
+		$crate::builtin_state_alias!($library, $name, stringify!($name), $state $(, $param)*)
+	};
+}
+
+
+#[macro_export]
 macro_rules! builtin {
-	($library:expr, $name:expr, $($param:expr),*) => {
-		$crate::builtin_alias!($library, $name, stringify!($name), $($param),*)
+	($library:expr, $name:expr $(, $param:expr)* $(,)?) => {
+		$crate::builtin_alias!($library, $name, stringify!($name) $(, $param)*)
 	};
 }
