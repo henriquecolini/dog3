@@ -199,6 +199,7 @@ async fn execute_command_statement<'env, 'stack>(
             ))
         }
     };
+    tokio::task::yield_now().await;
     let mut arg_values = vec![];
     for arg in &stmt.parameters {
         let output = evaluate!(execute_value(functions, stack, &arg.value).await);
@@ -277,6 +278,7 @@ async fn execute_for_statement<'env, 'stack>(
             Some(split) => Some(evaluate!(execute_value(functions, stack, split).await)),
         };
         for value in list.split_iter(split.as_ref()) {
+            tokio::task::yield_now().await;
             stack.set_var(&stmt.variable, Output::new(value.to_owned().into(), 0));
             proceed!(scoped!(stack, {
                 output.append(&evaluate!(
@@ -323,6 +325,7 @@ async fn execute_while_statement<'env, 'stack>(
     let mut output = Output::new_truthy();
     let mut condition = evaluate!(execute_value(functions, stack, &stmt.condition).await);
     while condition.is_truthy() {
+        tokio::task::yield_now().await;
         proceed!(scoped!(stack, {
             output.append(&evaluate!(
                 execute_value(functions, stack, &stmt.output).await
