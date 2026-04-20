@@ -85,7 +85,7 @@ impl Display for ExecutionError {
                 )
             }
             ExecutionError::InternalError => write!(f, "error: Internal runtime error"),
-            ExecutionError::Custom(err) => write!(f, "error: {err}"),
+            ExecutionError::Custom(err) => write!(f, "{err}"),
         }
     }
 }
