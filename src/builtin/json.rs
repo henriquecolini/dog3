@@ -241,6 +241,23 @@ async fn jget(
     }
 }
 
+async fn jkeys(
+    _: &FunctionLibrary,
+    _: &mut ScopeStack<'_>,
+    args: Vec<Output>,
+) -> Result<Output, ExecutionError> {
+    let obj = match args.as_slice() {
+        [obj] => obj,
+        _ => return Err(ExecutionError::InternalError),
+    };
+    if let Ok(obj) = serde_json::from_str::<Map<String, Value>>(obj.value()) {
+        let keys: Vec<_> = obj.into_iter().map(|(k,_)| k).collect();
+        Ok(Output::new_truthy_with(serde_json::to_string(&keys).unwrap().into()))
+    } else {
+        Ok(Output::new_falsy_with("null".into()))
+    }
+}
+
 pub fn build() -> FunctionLibrary {
     let mut library = FunctionLibrary::new();
     builtin!(library, gron, "input");
@@ -252,5 +269,6 @@ pub fn build() -> FunctionLibrary {
 	builtin!(library, jpush, "object", "%items");
 	builtin!(library, jlen, "object");
 	builtin!(library, jget, "object", "key");
+    builtin!(library, jkeys, "object");
     library
 }
