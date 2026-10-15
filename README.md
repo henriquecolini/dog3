@@ -4,19 +4,19 @@ This is the repository for `dog3`, an experimental, fun, and somewhat esoteric p
 <br>
 `dog3` is a mix of Rust and Bash, and is designed to be as easy to use as it is hard to do anything useful with.
 
-The following `dog3` program prints "Hello, world!" to the console:
+The following `dog3` program prints "Hello world!" to the console:
 
 ```
-pln Hello, world!
+pln Hello world!
 ```
 ```
-> Hello, world!
+> Hello world!
 ```
 
 However, this one does not:
 
 ```
-{ pln Hello, world! }
+{ pln Hello world! }
 ```
 ```
 >
@@ -29,15 +29,15 @@ To make stuff work, function outputting is fully scoped - that is, whenever a fu
 A block scope is a value by itself, and can be used in exactly the same places as a string can. The following code does indeed work:
 
 ```
-put { pln Hello, world! }
+put { pln Hello world! }
 ```
 ```
-> Hello, world!
+> Hello world!
 ```
 
 The function `put` simply outputs all of its inputs. It's the most basic and most common function you'll ever use. The function `pln` does the same, but it also appends a newline to the end of the output.
 
-Just like in Bash, parameters are delimited by spaces (therefore, in our first example, "Hello," and "world!" were, in fact, two separate arguments). If you want to use spaces in a parameter, you can use quotes or escape them:
+Just like in Bash, parameters are delimited by spaces (therefore, in our first example, "Hello" and "world!" were, in fact, two separate arguments). If you want to use spaces in a parameter, you can use quotes or escape them:
 
 ```
 pln "Double     quotes!";
@@ -50,11 +50,13 @@ pln Escape\ \ \ those\ \ \ spaces!;
 > Escape   those   spaces!
 ```
 
+Some characters are special and can't appear in an unquoted parameter: `;` `,` `{` `}` `(` `)` `=` `$` `%` `'` `"` `[` `]` `` ` `` `&`. To use them as text, put them inside quotes (`pln "Hello, world!"`).
+
 In `dog3`, variables work very similar to Bash as well:
 
 ```
 x = 5;
-pln I'm $x$x years old!;
+pln "I'm $x$x years old!";
 pln "That snake is $x' long!";
 pln '20$x5 = 100$'
 ```
@@ -63,6 +65,8 @@ pln '20$x5 = 100$'
 > That snake is 5' long!
 > 20$x5 = 100$
 ```
+
+Single quotes don't expand variables. Also note that a variable name runs until the next whitespace or special character, so `$x!` refers to a variable called `x!`, not `x` followed by `!`.
 
 And remember: blocks are values, just like strings:
 
@@ -166,28 +170,28 @@ We can also use `for` loops, to iterate over... strings split by whitespace, of 
 
 ```
 put for x in "dog3    is my  favorite  language" {
-    pln $x!
+    pln - $x
 }
 ```
 ```
-> dog3!
-> is!
-> my!
-> favorite!
-> language!
+> - dog3
+> - is
+> - my
+> - favorite
+> - language
 ```
 
-Additionally, you can split a string by any separator you want:
+Additionally, you can split a string by any separator you want with `split`:
 
 ```
-put for x in "ideal,for,csv" "," {
-    pln $x...
+put for x in "ideal,for,csv" split "," {
+    pln - $x
 }
 ```
 ```
-> ideal...
-> for...
-> csv...
+> - ideal
+> - for
+> - csv
 ```
 
 So far, we've only used the built-in functions of `dog3`. You can also define your own functions using the `fn` keyword:
@@ -198,22 +202,22 @@ fn add_one (x) {
 }
 
 fn say_hello () {
-    pln Hello, world!
+    pln Hello world!
 }
 
 // Yes, overloading is supported!
 fn say_hello (name) {
-    pln Hello, $name!
+    pln Hello $name
 }
 
-add_one 5;
+pln { add_one 5 };
 say_hello;
-say_hello dog3"
+say_hello dog3
 ```
 ```
 > 6
-> Hello, world!
-> Hello, dog3!
+> Hello world!
+> Hello dog3
 ```
 
 Functions take specific amounts of arguments. If you want an arbitrary amount of arguments, you can prefix a `%` to the end of the last argument name. This will join all remaining arguments into a single string, separated by spaces:
@@ -231,6 +235,27 @@ hug < > a b c d e f;
 > <a><b><c><d><e><f>
 ```
 
+Two keywords change what a block outputs. `return` stops the enclosing function and makes the given value its output, discarding everything the function output so far. Outside a function, `return` ends the whole program. `clear` throws away everything the current block has output so far, replacing it with the given value (or nothing):
+
+```
+fn find (target, %list) {
+    put for x in $list {
+        if { eq $x $target } {
+            return "found $x"
+        };
+        put "skipped $x\n"
+    };
+    put "not found"
+}
+
+pln { find 3 1 2 3 4 };
+pln { put a; put b; clear c; put d }
+```
+```
+> found 3
+> cd
+```
+
 Here are all the functions you can currently use. The list is small as the language is very young, and will increase over time.
 
 ### Module `std`
@@ -243,19 +268,24 @@ Here are all the functions you can currently use. The list is small as the langu
 | println %args | Writes `args` to standard output followed by a newline | truthy |
 | status arg | Returns the status code of `arg` | status `arg` |
 | status arg st | Outputs `arg` | `st` |
+| panic message | Stops the program with `message` as the error | — |
+| src name | Outputs the source code of every overload of function `name` (built-ins appear as stubs) | truthy |
+| eval code | Parses and runs `code` as a separate program that can use the current functions, then outputs its output | status of the program's output, or falsy with the error message if it fails |
 
 ### Module `iter`
 
 | Function | Description | Status |
 | -------- | ----------- | ------ |
-| range n | Outputs "0 1 2 3 ... `$n`" | truthy |
-| range n sep | Outputs "0`$sep`1`$sep`2`$sep`3`$sep`...`$sep`n" | truthy |
+| range max | Outputs "0 1 2 ... `max`-1" | truthy if `max` is an integer, falsy otherwise |
+| range min max | Outputs "`min` `min`+1 ... `max`-1" | truthy if all arguments are integers, falsy otherwise |
+| range min max step | Outputs every `step`th number from `min` up to (excluding) `max` | truthy if all arguments are integers and `step` >= 0, falsy otherwise |
+| range min max step sep | Same as above, separated by `sep` instead of spaces | truthy if all arguments are integers and `step` >= 0, falsy otherwise |
 | len arr | Outputs length of `arr`, split by whitespaces | truthy |
 | len arr sep | Outputs length of `arr`, split by `sep` | truthy |
-| first arr n | Outputs first `n` elements of `arr`, split by whitespaces | truthy if len <= n, falsy otherwise |
-| first arr n sep | Outputs first `n` elements of `arr`, split by `sep` | truthy if len <= n, falsy otherwise |
-| last arr n | Outputs last `n` elements of `arr`, split by whitespaces | truthy if len <= n, falsy otherwise |
-| last arr n sep | Outputs last `n` elements of `arr`, split by `sep` | truthy if len <= n, falsy otherwise |
+| first arr n | Outputs first `n` elements of `arr`, split by whitespaces | truthy if n <= len, falsy otherwise |
+| first arr n sep | Outputs first `n` elements of `arr`, split by `sep` | truthy if n <= len, falsy otherwise |
+| last arr n | Outputs last `n` elements of `arr`, split by whitespaces | truthy if n <= len, falsy otherwise |
+| last arr n sep | Outputs last `n` elements of `arr`, split by `sep` | truthy if n <= len, falsy otherwise |
 | append left right | Outputs the combined split by whitespaces of `left` and `right` chained | truthy |
 | append left right sep | Outputs the combined split by `sep` of `left` and `right` chained | truthy |
 
@@ -273,7 +303,7 @@ Here are all the functions you can currently use. The list is small as the langu
 | geq a b | Outputs "" | truthy if a >= b numerically, falsy otherwise
 | like a b | Outputs "" | truthy if a == b textually, falsy otherwise
 | and a b | Outputs "" | truthy if status a && status b, falsy otherwise
-| or a b | Outputs "" | truthy if status a && status b, falsy otherwise
+| or a b | Outputs "" | truthy if status a \|\| status b, falsy otherwise
 | not a | Outputs "" | truthy if status a != 0, falsy otherwise
 
 ### Module `math`
@@ -287,7 +317,7 @@ Here are all the functions you can currently use. The list is small as the langu
 | max first %others | Outputs decimal float max(`first`, `others`) | truthy if all arguments are numbers, falsy otherwise
 | min first %others | Outputs decimal float min(`first`, `others`) | truthy if all arguments are numbers, falsy otherwise
 | floor x | Outputs decimal float floor(`x`) | truthy if all arguments are numbers, falsy otherwise
-| ceil x | Outputs decimal float ceil(`first`) | truthy if all arguments are numbers, falsy otherwise
+| ceil x | Outputs decimal float ceil(`x`) | truthy if all arguments are numbers, falsy otherwise
 | random max | Outputs integer random number between 0 (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
 | random min max | Outputs integer random number between `min` (inclusive) and `max` (exclusive) | truthy if all arguments are numbers, falsy otherwise
 
@@ -298,6 +328,9 @@ Here are all the functions you can currently use. The list is small as the langu
 | upper %args | Outputs `args` in uppercase | status `args`
 | lower %args | Outputs `args` in lowercase | status `args`
 | replace target from to | Outputs `target` with all occurrences of `from` replaced by `to` | status `target`
+| search target pattern | Outputs the lines of `target` that match the regular expression `pattern` | truthy if `pattern` is a valid regex, falsy otherwise
+| is_alpha %args | Outputs "" | truthy if every character of `args` is alphabetic, falsy otherwise
+| is_alphanumeric %args | Outputs "" | truthy if every character of `args` is alphanumeric, falsy otherwise
 
 ### Module `net`
 
@@ -314,3 +347,12 @@ Here are all the functions you can currently use. The list is small as the langu
 | Function | Description | Status |
 | -------- | ----------- | ------ |
 | gron input | Outputs a flattened (grepabble) version of the JSON `input` | truthy if `input` is a valid JSON
+| jstr string | Outputs `string` as a JSON string (quoted and escaped) | truthy
+| jnum number | Outputs `number` as a JSON number, or `null` | truthy if `number` is a valid number, falsy otherwise
+| jarr %items | Outputs a JSON array of `items`; items that are valid JSON are kept as is, others become strings | truthy
+| jobj %keys_values | Outputs a JSON object from alternating keys and values (values as in `jarr`) | truthy
+| jstr_parse json_string | Outputs the text inside a JSON string | truthy if `json_string` is a JSON string, falsy otherwise
+| jpush object %items | Outputs the JSON array `object` with `items` appended | truthy
+| jlen object | Outputs the length of a JSON array or object, or `null` | truthy if `object` is an array or object, falsy otherwise
+| jget object key | Outputs the element at `key` of a JSON object, or at index `key` of an array, or `null` | truthy if found, falsy otherwise
+| jkeys object | Outputs the keys of a JSON object as a JSON array, or `null` | truthy if `object` is an object, falsy otherwise
